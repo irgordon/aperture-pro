@@ -1,0 +1,44 @@
+<?php
+/** @var WP_Post[] $projects */
+?>
+<div class="wrap ap-wrap">
+    <h1 class="wp-heading-inline">Projects</h1>
+
+    <table class="wp-list-table widefat fixed striped">
+        <thead>
+        <tr>
+            <th>Project</th>
+            <th>Client</th>
+            <th>Status</th>
+            <th>Stage</th>
+            <th>Last Activity</th>
+        </tr>
+        </thead>
+        <tbody>
+        <?php if (empty($projects)) : ?>
+            <tr><td colspan="5">No projects found.</td></tr>
+        <?php else : ?>
+            <?php foreach ($projects as $project) : ?>
+                <?php
+                $project_id = $project->ID;
+                $client     = get_post_meta($project_id, 'ap_client_name', true);
+                $stage      = ap_get_stage($project_id);
+                $status     = get_post_status($project_id);
+                $last       = get_post_meta($project_id, 'ap_last_activity', true);
+                ?>
+                <tr>
+                    <td>
+                        <a href="<?php echo esc_url(admin_url('admin.php?page=aperture-pro-projects&project_id=' . $project_id)); ?>">
+                            <?php echo esc_html(get_the_title($project)); ?>
+                        </a>
+                    </td>
+                    <td><?php echo esc_html($client ?: '—'); ?></td>
+                    <td><span class="ap-badge ap-badge-status"><?php echo esc_html($status); ?></span></td>
+                    <td><span class="ap-badge ap-badge-stage"><?php echo esc_html($stage); ?></span></td>
+                    <td><?php echo esc_html($last ?: '—'); ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php endif; ?>
+        </tbody>
+    </table>
+</div>
