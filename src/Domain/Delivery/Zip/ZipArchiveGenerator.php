@@ -5,6 +5,7 @@ namespace AperturePro\Domain\Delivery\Zip;
 use ZipArchive;
 use AperturePro\Storage\StorageManager;
 use AperturePro\Support\Error;
+use AperturePro\Domain\Delivery\Zip\NoImagesFoundException;
 
 class ZipArchiveGenerator implements ZipGeneratorInterface
 {
@@ -13,8 +14,7 @@ class ZipArchiveGenerator implements ZipGeneratorInterface
         $images = ap_get_project_images($project_id);
 
         if (empty($images)) {
-            // Even if empty, we might want to generate an empty zip or throw error.
-            // For now, let's allow empty zip or just handle it gracefully.
+            throw new NoImagesFoundException('No images found for project. Cannot generate ZIP file.');
         }
 
         $tempFile = tempnam(sys_get_temp_dir(), 'ap_zip_');
