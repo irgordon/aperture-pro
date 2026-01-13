@@ -13,6 +13,11 @@ class Installer
     {
         self::runMigrations();
         update_option('ap_db_version', self::VERSION);
+
+        // Trigger wizard on first install
+        if (!get_option('ap_wizard_completed')) {
+            set_transient('ap_wizard_pending', true);
+        }
     }
 
     public static function deactivate(): void
