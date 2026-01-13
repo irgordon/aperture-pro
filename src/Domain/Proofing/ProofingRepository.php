@@ -70,7 +70,14 @@ class ProofingRepository
 
         // This only counts images that have a status.
         // To get 'pending', we need total images count.
-        $totalImages = count(ap_get_project_images($project_id));
+        $totalImages = (int) $wpdb->get_var($wpdb->prepare(
+            "SELECT COUNT(*) FROM {$wpdb->posts}
+             WHERE post_parent = %d
+             AND post_type = 'attachment'
+             AND post_mime_type LIKE %s",
+            $project_id,
+            'image/%'
+        ));
         $ratedCount = 0;
 
         foreach ($results as $row) {

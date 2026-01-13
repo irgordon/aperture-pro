@@ -10,13 +10,6 @@ class ZipArchiveGenerator implements ZipGeneratorInterface
 {
     public function generate(int $project_id): ZipResult
     {
-        $images = ap_get_project_images($project_id);
-
-        if (empty($images)) {
-            // Even if empty, we might want to generate an empty zip or throw error.
-            // For now, let's allow empty zip or just handle it gracefully.
-        }
-
         $tempFile = tempnam(sys_get_temp_dir(), 'ap_zip_');
         $zip = new ZipArchive();
 
@@ -25,23 +18,35 @@ class ZipArchiveGenerator implements ZipGeneratorInterface
         }
 
         $addedNames = [];
-        foreach ($images as $image) {
-            $filePath = get_attached_file($image->ID);
-            if ($filePath && file_exists($filePath)) {
-                $fileName = basename($filePath);
+        $batch_size = 100; // Process 100 images at a time
+        $offset = 0;
 
-                // Handle duplicate filenames
-                $base = pathinfo($fileName, PATHINFO_FILENAME);
-                $ext = pathinfo($fileName, PATHINFO_EXTENSION);
-                $count = 1;
-                while (isset($addedNames[$fileName])) {
-                    $fileName = $base . '-' . $count . '.' . $ext;
-                    $count++;
-                }
-                $addedNames[$fileName] = true;
+        while (true) {
+            $images = ap_get_project_images($project_id, $batch_size, $offset);
 
-                $zip->addFile($filePath, $fileName);
+            if (empty($images)) {
+                break; // No more images
             }
+
+            foreach ($images as $image) {
+                $filePath = get_attached_file($image->ID);
+                if ($filePath && file_exists($filePath)) {
+                    $fileName = basename($filePath);
+
+                    // Handle duplicate filenames
+                    $base = pathinfo($fileName, PATHINFO_FILENAME);
+                    $ext = pathinfo($fileName, PATHINFO_EXTENSION);
+                    $count = 1;
+                    while (isset($addedNames[$fileName])) {
+                        $fileName = $base . '-' . $count . '.' . $ext;
+                        $count++;
+                    }
+                    $addedNames[$fileName] = true;
+
+                    $zip->addFile($filePath, $fileName);
+                }
+            }
+            $offset += $batch_size;
         }
 
         $zip->close();
