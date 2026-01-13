@@ -7,6 +7,7 @@ use AperturePro\Domain\Delivery\DeliveryService;
 use AperturePro\Domain\Delivery\Zip\ZipResult;
 use AperturePro\Domain\ImageOptimization\ImageOptimizationService;
 use AperturePro\Domain\ImageOptimization\OptimizationResult;
+use AperturePro\Domain\Notification\NotificationService;
 
 class JobRunner
 {
@@ -27,6 +28,10 @@ class JobRunner
 
                 case JobTypes::IMAGE_OPTIMIZATION:
                     self::runImageOptimizationJob($job);
+                    break;
+
+                case JobTypes::EMAIL_BATCH:
+                    self::runEmailBatchJob($job);
                     break;
 
                 default:
@@ -88,5 +93,30 @@ class JobRunner
         $result = $optimizer->optimize($project_id);
 
         ImageOptimizationService::handleSuccess($project_id, $result);
+    }
+
+    protected static function runEmailBatchJob(Job $job): void
+    {
+        $payload = $job->payloadArray();
+        $recipients = $payload['recipients'] ?? [];
+        $subject = $payload['subject'] ?? '';
+        $message = $payload['message'] ?? '';
+
+        if (empty($recipients) || empty($subject) || empty($message)) {
+            throw new \RuntimeException('Invalid payload for email batch job.');
+        }
+
+        $service = new NotificationService();
+        $failed = $service->sendBatch($recipients, $subject, $message);
+
+        if (!empty($failed)) {
+            Logger::warning('Some emails failed to send in batch job ' . $job->id, [
+                'failed_recipients' => $failed,
+            ], $job->project_id);
+
+            if (count($failed) === count($recipients)) {
+                throw new \RuntimeException('All emails failed to send.');
+            }
+        }
     }
 }
