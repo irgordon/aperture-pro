@@ -3,6 +3,7 @@
 namespace AperturePro\Domain\Delivery;
 
 use AperturePro\Domain\Logs\Logger;
+use AperturePro\Support\Cache;
 
 class DeliveryRepository
 {
@@ -16,10 +17,13 @@ class DeliveryRepository
     {
         global $wpdb;
         $table = self::table();
+        $key = Cache::key('delivery', $project_id);
 
-        return $wpdb->get_row(
-            $wpdb->prepare("SELECT * FROM $table WHERE project_id = %d", $project_id)
-        );
+        return Cache::remember($key, function() use ($wpdb, $table, $project_id) {
+            return $wpdb->get_row(
+                $wpdb->prepare("SELECT * FROM $table WHERE project_id = %d", $project_id)
+            );
+        });
     }
 
     public static function save(int $project_id, string $path, int $size, string $status = 'ready'): bool
@@ -38,11 +42,20 @@ class DeliveryRepository
         // Check if exists
         $exists = $wpdb->get_var($wpdb->prepare("SELECT id FROM $table WHERE project_id = %d", $project_id));
 
+        $result = false;
         if ($exists) {
-            return (bool) $wpdb->update($table, $data, ['project_id' => $project_id]);
+            $check = $wpdb->update($table, $data, ['project_id' => $project_id]);
+            $result = (bool) $check;
         } else {
             $data['created_at'] = current_time('mysql');
-            return (bool) $wpdb->insert($table, $data);
+            $check = $wpdb->insert($table, $data);
+            $result = (bool) $check;
         }
+
+        if ($result) {
+            Cache::forget(Cache::key('delivery', $project_id));
+        }
+
+        return $result;
     }
 }
