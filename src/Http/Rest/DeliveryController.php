@@ -4,6 +4,7 @@ namespace AperturePro\Http\Rest;
 
 use WP_REST_Request;
 use WP_Error;
+use AperturePro\Domain\Delivery\DeliveryRepository;
 use AperturePro\Domain\Jobs\JobScheduler;
 use AperturePro\Domain\Jobs\JobTypes;
 use AperturePro\Domain\Tokens\TokenService;
@@ -42,14 +43,20 @@ class DeliveryController
     {
         $project_id = (int) $req['id'];
 
-        $zipUrl = get_post_meta($project_id, 'ap_delivery_zip_url', true);
-        $zipSize = get_post_meta($project_id, 'ap_delivery_zip_size', true);
-        $zipDate = get_post_meta($project_id, 'ap_delivery_zip_date', true);
+        $delivery = DeliveryRepository::get($project_id);
+
+        if (!$delivery) {
+             return Response::success([
+                'zip_url'  => null,
+                'zip_size' => 0,
+                'zip_date' => null,
+            ]);
+        }
 
         return Response::success([
-            'zip_url'  => $zipUrl,
-            'zip_size' => (int) $zipSize,
-            'zip_date' => $zipDate,
+            'zip_url'  => $delivery->zip_path,
+            'zip_size' => (int) $delivery->zip_size,
+            'zip_date' => $delivery->updated_at,
         ]);
     }
 }
