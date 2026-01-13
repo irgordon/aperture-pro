@@ -23,6 +23,99 @@ class ImageKitAdapter implements StorageAdapterInterface
             throw new \Exception("File not found at $localPath");
         }
 
+        // Optimize for memory: Use native Curl if available to stream file
+        if (extension_loaded('curl') && function_exists('curl_init') && class_exists('CURLFile')) {
+            try {
+                return $this->storeWithCurl($localPath, $targetPath);
+            } catch (\Exception $e) {
+                // Log error and fallback to legacy method to ensure reliability
+                error_log('AperturePro: ImageKit Curl Upload failed, falling back to legacy. Error: ' . $e->getMessage());
+            }
+        }
+
+        return $this->storeLegacy($localPath, $targetPath);
+    }
+
+    protected function storeWithCurl(string $localPath, string $targetPath): string
+    {
+        $ch = curl_init();
+
+        $url = 'https://upload.imagekit.io/api/v1/files/upload';
+        $fileName = basename($targetPath);
+        $folder = dirname($targetPath);
+
+        // Normalize folder
+        if ($folder === '.' || $folder === '\\') {
+            $folder = '/';
+        }
+
+        $fields = [
+            'file' => new \CURLFile($localPath),
+            'fileName' => $fileName,
+            'useUniqueFileName' => 'false',
+        ];
+
+        if ($folder && $folder !== '/') {
+            $fields['folder'] = $folder;
+        }
+
+        curl_setopt($ch, CURLOPT_URL, $url);
+        curl_setopt($ch, CURLOPT_POST, true);
+        curl_setopt($ch, CURLOPT_POSTFIELDS, $fields);
+        curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
+        // ImageKit uses Basic Auth with private key as username and empty password
+        curl_setopt($ch, CURLOPT_USERPWD, $this->config['privateKey'] . ':');
+        curl_setopt($ch, CURLOPT_TIMEOUT, 60);
+
+        // Respect WordPress Proxy Settings
+        if (defined('WP_PROXY_HOST')) {
+            curl_setopt($ch, CURLOPT_PROXY, WP_PROXY_HOST);
+        }
+        if (defined('WP_PROXY_PORT')) {
+            curl_setopt($ch, CURLOPT_PROXYPORT, WP_PROXY_PORT);
+        }
+        if (defined('WP_PROXY_USERNAME')) {
+            $auth = WP_PROXY_USERNAME;
+            if (defined('WP_PROXY_PASSWORD')) {
+                $auth .= ':' . WP_PROXY_PASSWORD;
+            }
+            curl_setopt($ch, CURLOPT_PROXYUSERPWD, $auth);
+        }
+
+        $response = curl_exec($ch);
+        $error = curl_error($ch);
+        $errno = curl_errno($ch);
+        $code = curl_getinfo($ch, CURLINFO_HTTP_CODE);
+
+        curl_close($ch);
+
+        if ($errno) {
+             throw new \Exception('ImageKit Upload Failed (Curl): ' . $error);
+        }
+
+        $data = json_decode($response, true);
+
+        if (!is_array($data)) {
+            $data = [];
+        }
+
+        if ($code < 200 || $code >= 300) {
+            $msg = $data['message'] ?? 'Unknown error';
+            throw new \Exception("ImageKit Upload Error ($code): $msg");
+        }
+
+        if (empty($data['filePath'])) {
+            if (!empty($data['url'])) {
+                return $data['url'];
+            }
+            throw new \Exception("ImageKit Upload Error: No filePath or URL in response");
+        }
+
+        return rtrim($this->config['urlEndpoint'], '/') . '/' . ltrim($data['filePath'], '/');
+    }
+
+    protected function storeLegacy(string $localPath, string $targetPath): string
+    {
         $fileContent = file_get_contents($localPath);
         if ($fileContent === false) {
             throw new \Exception("Failed to read file at $localPath");
