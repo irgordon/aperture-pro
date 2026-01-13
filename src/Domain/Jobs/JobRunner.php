@@ -21,13 +21,14 @@ class JobRunner
         JobRepository::updateStatus($job, JobState::RUNNING);
 
         try {
+            $finished = true;
             switch ($job->type) {
                 case JobTypes::ZIP_GENERATION:
                     self::runZipJob($job);
                     break;
 
                 case JobTypes::IMAGE_OPTIMIZATION:
-                    self::runImageOptimizationJob($job);
+                    $finished = self::runImageOptimizationJob($job);
                     break;
 
                 case JobTypes::EMAIL_BATCH:
@@ -38,19 +39,30 @@ class JobRunner
                     throw new \RuntimeException('Unknown job type: ' . $job->type);
             }
 
-            JobRepository::updateStatus($job, JobState::SUCCEEDED);
+            if ($finished === false) {
+                Logger::info('Job continuing', [
+                    'job_id'     => $job->id,
+                    'project_id' => $job->project_id,
+                    'type'       => $job->type,
+                ], $job->project_id);
 
-            Logger::info('Job succeeded', [
-                'job_id'     => $job->id,
-                'project_id' => $job->project_id,
-                'type'       => $job->type,
-            ], $job->project_id);
+                // Reschedule immediately for continuation
+                wp_schedule_single_event(time(), 'ap_run_job', [$job->id]);
+            } else {
+                JobRepository::updateStatus($job, JobState::SUCCEEDED);
 
-            do_action(JobEvents::SUCCEEDED, [
-                'job_id'     => $job->id,
-                'project_id' => $job->project_id,
-                'type'       => $job->type,
-            ]);
+                Logger::info('Job succeeded', [
+                    'job_id'     => $job->id,
+                    'project_id' => $job->project_id,
+                    'type'       => $job->type,
+                ], $job->project_id);
+
+                do_action(JobEvents::SUCCEEDED, [
+                    'job_id'     => $job->id,
+                    'project_id' => $job->project_id,
+                    'type'       => $job->type,
+                ]);
+            }
 
         } catch (\Throwable $e) {
             JobRepository::updateStatus($job, JobState::FAILED, $e->getMessage());
@@ -84,7 +96,7 @@ class JobRunner
         DeliveryService::handleZipSuccess($project_id, $result);
     }
 
-    protected static function runImageOptimizationJob(Job $job): void
+    protected static function runImageOptimizationJob(Job $job): bool
     {
         $project_id = $job->project_id;
 
@@ -93,6 +105,8 @@ class JobRunner
         $result = $optimizer->optimize($project_id);
 
         ImageOptimizationService::handleSuccess($project_id, $result);
+
+        return $result->completed;
     }
 
     protected static function runEmailBatchJob(Job $job): void
