@@ -2,12 +2,76 @@
 
 namespace AperturePro\Domain\Jobs;
 
+use AperturePro\Support\Cache;
+
 class JobRepository
 {
+    private static function getCacheKey(int $id): string
+    {
+        return "job_{$id}";
+    }
+
     protected static function table(): string
     {
         global $wpdb;
         return $wpdb->prefix . 'ap_jobs';
+    }
+
+    private static function insert(Job $job): int
+    {
+        global $wpdb;
+
+        $wpdb->insert(
+            self::table(),
+            [
+                'project_id'   => $job->project_id,
+                'type'         => $job->type,
+                'status'       => $job->status,
+                'attempts'     => $job->attempts,
+                'max_attempts' => $job->max_attempts,
+                'last_error'   => $job->last_error,
+                'payload'      => $job->payload,
+                'created_at'   => $job->created_at,
+                'updated_at'   => $job->updated_at,
+            ],
+            ['%d', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s']
+        );
+
+        return (int) $wpdb->insert_id;
+    }
+
+    private static function update(Job $job): void
+    {
+        global $wpdb;
+
+        $wpdb->update(
+            self::table(),
+            [
+                'project_id'   => $job->project_id,
+                'type'         => $job->type,
+                'status'       => $job->status,
+                'attempts'     => $job->attempts,
+                'max_attempts' => $job->max_attempts,
+                'last_error'   => $job->last_error,
+                'payload'      => $job->payload,
+                'created_at'   => $job->created_at,
+                'updated_at'   => $job->updated_at,
+            ],
+            ['id' => $job->id],
+            ['%d', '%s', '%s', '%d', '%d', '%s', '%s', '%s', '%s'],
+            ['%d']
+        );
+    }
+
+    public static function save(Job $job): void
+    {
+        if ($job->id > 0) {
+            self::update($job);
+        } else {
+            $job->id = self::insert($job);
+        }
+
+        self::clearCache($job);
     }
 
     public static function create(int $project_id, string $type, array $payload = []): int
@@ -37,6 +101,13 @@ class JobRepository
     {
         global $wpdb;
 
+        $cacheKey = self::getCacheKey($id);
+        $job = Cache::get($cacheKey);
+
+        if ($job instanceof Job) {
+            return $job;
+        }
+
         $row = $wpdb->get_row(
             $wpdb->prepare(
                 'SELECT * FROM ' . self::table() . ' WHERE id = %d',
@@ -44,7 +115,19 @@ class JobRepository
             )
         );
 
-        return $row ? new Job($row) : null;
+        if (!$row) {
+            return null;
+        }
+
+        $job = new Job($row);
+        Cache::put($cacheKey, $job);
+
+        return $job;
+    }
+
+    public static function clearCache(Job $job): void
+    {
+        Cache::forget(self::getCacheKey($job->id));
     }
 
     public static function updateStatus(Job $job, string $status, ?string $error = null): void
