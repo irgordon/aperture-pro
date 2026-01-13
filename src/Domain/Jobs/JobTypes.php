@@ -6,14 +6,14 @@ class JobTypes
 {
     public const ZIP_GENERATION = 'zip_generation';
     public const IMAGE_OPTIMIZATION = 'image_optimization';
-    // Future:
-    // public const EMAIL_BATCH        = 'email_batch';
+    public const EMAIL_BATCH        = 'email_batch';
 
     public static function all(): array
     {
         return [
             self::ZIP_GENERATION,
             self::IMAGE_OPTIMIZATION,
+            self::EMAIL_BATCH,
         ];
     }
 }

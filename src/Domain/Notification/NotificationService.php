@@ -69,4 +69,23 @@ class NotificationService
 
         return $email;
     }
+
+    /**
+     * Send a batch of emails.
+     *
+     * @param array  $recipients List of email addresses.
+     * @param string $subject    Email subject.
+     * @param string $message    Email message.
+     * @return array Array of failed recipients.
+     */
+    public function sendBatch(array $recipients, string $subject, string $message): array
+    {
+        $failed = [];
+        foreach ($recipients as $to) {
+            if (!$this->sendEmail($to, $subject, $message)) {
+                $failed[] = $to;
+            }
+        }
+        return $failed;
+    }
 }
