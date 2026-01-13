@@ -3,6 +3,7 @@
 namespace AperturePro\Domain\Delivery\Zip;
 
 use ZipArchive;
+use AperturePro\Domain\Delivery\Zip\Exception\NoImagesFoundException;
 use AperturePro\Storage\StorageManager;
 use AperturePro\Support\Error;
 use AperturePro\Domain\Delivery\Zip\NoImagesFoundException;
