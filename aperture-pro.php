@@ -67,6 +67,7 @@ add_action('plugins_loaded', function () {
 
     // Client Portal
     AperturePro\Client\Portal::boot();
+    AperturePro\Client\Gallery::boot();
 
     // Shared component library
     add_action('wp_enqueue_scripts', function () {
