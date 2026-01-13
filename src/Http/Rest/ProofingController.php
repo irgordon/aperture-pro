@@ -9,36 +9,37 @@ use AperturePro\Http\Middleware\StateValidation;
 use AperturePro\Domain\Proofing\ProofingService;
 use AperturePro\Domain\Proofing\ProofingState;
 use AperturePro\Domain\Proofing\ProofingRepository;
+use AperturePro\Support\Cache;
 
-class ProofingController
+class ProofingController extends BaseController
 {
     public function register_routes(): void
     {
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/update', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/update', [
             'methods'             => 'POST',
             'callback'            => [$this, 'updateImage'],
             'permission_callback' => [Permissions::class, 'client_or_admin_can_proof'],
         ]);
 
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/submit', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/submit', [
             'methods'             => 'POST',
             'callback'            => [$this, 'submit'],
             'permission_callback' => [Permissions::class, 'client_or_admin_can_proof'],
         ]);
 
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/unlock', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/unlock', [
             'methods'             => 'POST',
             'callback'            => [$this, 'unlock'],
             'permission_callback' => [Permissions::class, 'admin_only'],
         ]);
 
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/complete', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/complete', [
             'methods'             => 'POST',
             'callback'            => [$this, 'complete'],
             'permission_callback' => [Permissions::class, 'admin_only'],
         ]);
 
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/summary', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/proofing/summary', [
             'methods'             => 'GET',
             'callback'            => [$this, 'summary'],
             'permission_callback' => [Permissions::class, 'client_or_admin_can_view_project'],
@@ -57,6 +58,9 @@ class ProofingController
 
         ProofingService::updateImage($project_id, $image_id, $status, $note);
 
+        Cache::forget(Cache::key('proofing_summary', $project_id));
+        Cache::forget(Cache::key('status', $project_id));
+
         return [
             'success' => true,
         ];
@@ -72,6 +76,9 @@ class ProofingController
 
         ProofingService::submitSelections($project_id, $message);
 
+        Cache::forget(Cache::key('proofing_summary', $project_id));
+        Cache::forget(Cache::key('status', $project_id));
+
         return [
             'success' => true,
             'state'   => ProofingState::SUBMITTED,
@@ -85,6 +92,9 @@ class ProofingController
         StateValidation::assertProofingState($project_id, [ProofingState::SUBMITTED]);
 
         ProofingService::reopen($project_id);
+
+        Cache::forget(Cache::key('proofing_summary', $project_id));
+        Cache::forget(Cache::key('status', $project_id));
 
         return [
             'success' => true,
@@ -100,6 +110,9 @@ class ProofingController
 
         ProofingService::complete($project_id);
 
+        Cache::forget(Cache::key('proofing_summary', $project_id));
+        Cache::forget(Cache::key('status', $project_id));
+
         return [
             'success' => true,
             'stage'   => 'editing',
@@ -110,11 +123,17 @@ class ProofingController
     {
         $project_id = (int) $req['id'];
 
-        return [
-            'round'  => ProofingRepository::getRound($project_id),
-            'counts' => ProofingRepository::getCounts($project_id),
-            'state'  => ProofingRepository::getState($project_id),
-            'message'=> get_post_meta($project_id, 'ap_proofing_message', true),
-        ];
+        return Cache::remember(
+            Cache::key('proofing_summary', $project_id),
+            function () use ($project_id) {
+                return [
+                    'round'  => ProofingRepository::getRound($project_id),
+                    'counts' => ProofingRepository::getCounts($project_id),
+                    'state'  => ProofingRepository::getState($project_id),
+                    'message'=> get_post_meta($project_id, 'ap_proofing_message', true),
+                ];
+            },
+            300
+        );
     }
 }

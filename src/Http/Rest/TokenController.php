@@ -7,11 +7,11 @@ use AperturePro\Domain\Tokens\TokenService;
 use AperturePro\Http\Middleware\Permissions;
 use AperturePro\Support\Response;
 
-class TokenController
+class TokenController extends BaseController
 {
     public function register_routes(): void
     {
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/tokens', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/tokens', [
             'methods'             => 'POST',
             'callback'            => [$this, 'create'],
             'permission_callback' => [Permissions::class, 'admin_only'],

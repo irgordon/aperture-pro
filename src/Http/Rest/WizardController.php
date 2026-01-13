@@ -6,11 +6,11 @@ use AperturePro\Core\Settings;
 use WP_REST_Request;
 use WP_REST_Response;
 
-class WizardController
+class WizardController extends BaseController
 {
     public function register_routes(): void
     {
-        register_rest_route('aperture-pro/v1', '/wizard/save', [
+        $this->register_route('aperture-pro/v1', '/wizard/save', [
             'methods'  => 'POST',
             'callback' => [$this, 'save'],
             'permission_callback' => function () {

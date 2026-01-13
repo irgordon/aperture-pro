@@ -8,17 +8,17 @@ use AperturePro\Domain\Jobs\JobScheduler;
 use AperturePro\Http\Middleware\Permissions;
 use AperturePro\Support\Response;
 
-class JobsController
+class JobsController extends BaseController
 {
     public function register_routes(): void
     {
-        register_rest_route('aperture-pro/v1', '/jobs', [
+        $this->register_route('aperture-pro/v1', '/jobs', [
             'methods'             => 'GET',
             'callback'            => [$this, 'index'],
             'permission_callback' => [Permissions::class, 'admin_only'],
         ]);
 
-        register_rest_route('aperture-pro/v1', '/jobs/(?P<id>\d+)/retry', [
+        $this->register_route('aperture-pro/v1', '/jobs/(?P<id>\d+)/retry', [
             'methods'             => 'POST',
             'callback'            => [$this, 'retry'],
             'permission_callback' => [Permissions::class, 'admin_only'],

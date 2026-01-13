@@ -6,11 +6,11 @@ use WP_REST_Request;
 use WP_Error;
 use AperturePro\Http\Middleware\Permissions;
 
-class ClientController
+class ClientController extends BaseController
 {
     public function register_routes(): void
     {
-        register_rest_route('aperture-pro/v1', '/projects/(?P<id>\d+)/client', [
+        $this->register_route('aperture-pro/v1', '/projects/(?P<id>\d+)/client', [
             'methods'             => 'POST',
             'callback'            => [$this, 'update'],
             'permission_callback' => [Permissions::class, 'admin_can_manage_project'],
