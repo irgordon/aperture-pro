@@ -1,0 +1,19 @@
+/*
+Theme Name: Aperture Pro SPA
+Theme URI: https://example.com/
+Author: Aperture Pro
+Description: Single-page app shell for Aperture Pro client portal.
+Version: 1.0.0
+Text Domain: aperture-pro-spa
+*/
+
+body {
+    margin: 0;
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto;
+    background: #0f172a;
+    color: #e2e8f0;
+}
+
+#aperture-pro-app {
+    min-height: 100vh;
+}
