@@ -7,6 +7,8 @@ use AperturePro\Http\Rest\ProofingController;
 use AperturePro\Http\Rest\EditingController;
 use AperturePro\Http\Rest\DeliveryController;
 use AperturePro\Http\Rest\ClientController;
+use AperturePro\Http\Rest\TokenController;
+use AperturePro\Http\Rest\JobsController;
 use AperturePro\Domain\Jobs\JobRunner;
 
 class Plugin
@@ -21,6 +23,8 @@ class Plugin
             (new EditingController())->register_routes();
             (new DeliveryController())->register_routes();
             (new ClientController())->register_routes();
+            (new TokenController())->register_routes();
+            (new JobsController())->register_routes();
         });
 
         add_action('ap_run_job', [JobRunner::class, 'handle'], 10, 1);

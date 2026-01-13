@@ -7,11 +7,12 @@ use AperturePro\Domain\Logs\Logger;
 class Installer
 {
     // Bump this when you add new migrations
-    public const VERSION = '1.0.0';
+    public const VERSION = '1.1.0';
 
     public static function activate(): void
     {
         self::runMigrations();
+        self::migrateData();
         update_option('ap_db_version', self::VERSION);
 
         // Trigger wizard on first install
@@ -74,6 +75,46 @@ class Installer
                 // Do not silently swallow; log and stop further migrations
                 break;
             }
+        }
+    }
+
+    protected static function migrateData(): void
+    {
+        global $wpdb;
+        $proofingTable = $wpdb->prefix . 'ap_proofing';
+
+        // Check if proofing table is empty to avoid double migration
+        if ($wpdb->get_var("SELECT COUNT(*) FROM $proofingTable") > 0) {
+            return;
+        }
+
+        // Single query migration:
+        // Join postmeta (status) with posts (parent_id) and optionally postmeta (note)
+        // This is much faster than iterating.
+
+        $sql = "
+            INSERT INTO $proofingTable (project_id, image_id, status, note, updated_at)
+            SELECT
+                p.post_parent as project_id,
+                pm_status.post_id as image_id,
+                pm_status.meta_value as status,
+                pm_note.meta_value as note,
+                NOW() as updated_at
+            FROM {$wpdb->postmeta} pm_status
+            INNER JOIN {$wpdb->posts} p ON p.ID = pm_status.post_id
+            LEFT JOIN {$wpdb->postmeta} pm_note ON pm_note.post_id = pm_status.post_id AND pm_note.meta_key = 'ap_proof_note'
+            WHERE pm_status.meta_key = 'ap_proof_status'
+            AND p.post_type = 'attachment'
+        ";
+
+        // Filter out orphans if needed, but INNER JOIN on posts handles most.
+        // We assume images are attachments.
+
+        try {
+            $wpdb->query($sql);
+            Logger::info('Proofing data migrated to custom table');
+        } catch (\Throwable $e) {
+            Logger::error('Proofing data migration failed', ['error' => $e->getMessage()]);
         }
     }
 }

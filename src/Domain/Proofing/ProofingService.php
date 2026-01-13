@@ -9,11 +9,8 @@ class ProofingService
 {
     public static function updateImage(int $project_id, int $image_id, string $status, ?string $note): void
     {
-        update_post_meta($image_id, 'ap_proof_status', $status);
-
-        if ($note !== null && $note !== '') {
-            update_post_meta($image_id, 'ap_proof_note', wp_kses_post($note));
-        }
+        $sanitizedNote = ($note !== null && $note !== '') ? wp_kses_post($note) : null;
+        ProofingRepository::updateImageStatus($project_id, $image_id, $status, $sanitizedNote);
 
         do_action(ProofingEvents::IMAGE_UPDATED, [
             'project_id' => $project_id,
