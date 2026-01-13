@@ -1,0 +1,71 @@
+aperture-pro/
+├─ aperture-pro.php
+├─ readme.txt
+├─ composer.json
+├─ package.json
+├─ src/
+│  ├─ Core/
+│  │  ├─ Plugin.php
+│  │  ├─ Installer.php
+│  │  ├─ Hooks.php
+│  │  └─ Autoloader.php
+│  ├─ Domain/
+│  │  ├─ Project/
+│  │  │  ├─ ProjectStage.php
+│  │  │  ├─ ProjectStatusService.php
+│  │  │  └─ ProjectRepository.php
+│  │  ├─ Proofing/
+│  │  │  ├─ ProofingState.php
+│  │  │  ├─ ProofingService.php
+│  │  │  └─ ProofingRepository.php
+│  │  ├─ Editing/
+│  │  │  ├─ EditingState.php
+│  │  │  └─ EditingService.php
+│  │  ├─ Delivery/
+│  │  │  ├─ DeliveryState.php
+│  │  │  ├─ DeliveryService.php
+│  │  │  └─ Zip/
+│  │  │     ├─ ZipGeneratorInterface.php
+│  │  │     ├─ LocalZipGenerator.php
+│  │  │     └─ S3ZipGenerator.php
+│  │  ├─ Jobs/
+│  │  │  ├─ JobRepository.php
+│  │  │  └─ JobRunner.php
+│  │  ├─ Tokens/
+│  │  │  ├─ TokenRepository.php
+│  │  │  └─ TokenService.php
+│  │  └─ Logs/
+│  │     ├─ LogRepository.php
+│  │     └─ Logger.php
+│  ├─ Http/
+│  │  ├─ Rest/
+│  │  │  ├─ ProjectStatusController.php
+│  │  │  ├─ ProofingController.php
+│  │  │  ├─ EditingController.php
+│  │  │  └─ DeliveryController.php
+│  │  └─ Middleware/
+│  │     └─ Permissions.php
+│  ├─ Admin/
+│  │  ├─ Screens/
+│  │  │  ├─ ProjectsScreen.php
+│  │  │  ├─ ProjectDetailScreen.php
+│  │  │  ├─ JobsScreen.php
+│  │  │  └─ HealthScreen.php
+│  │  └─ Assets/
+│  │     ├─ css/
+│  │     └─ js/
+│  └─ Client/
+│     ├─ Portal.php
+│     └─ Assets/
+│        ├─ css/
+│        └─ js/
+├─ templates/
+│  ├─ admin/
+│  │  ├─ projects.php
+│  │  ├─ project-detail.php
+│  │  └─ health.php
+│  └─ client/
+│     └─ portal.php
+└─ sql/
+   ├─ schema.sql
+   └─ migrations/
