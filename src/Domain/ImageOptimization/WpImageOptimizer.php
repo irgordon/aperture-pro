@@ -13,10 +13,30 @@ class WpImageOptimizer implements ImageOptimizerInterface
     {
         $result = new OptimizationResult();
         $batch_size = 50; // Process 50 images at a time
-        $offset = 0;
+        $failed_ids = [];
 
         while (true) {
-            $images = ap_get_project_images($project_id, $batch_size, $offset);
+            // Optimization: Query only unoptimized images to avoid N+1 and fetching unnecessary data
+            $args = [
+                'post_type'      => 'attachment',
+                'post_parent'    => $project_id,
+                'posts_per_page' => $batch_size,
+                'post_mime_type' => 'image',
+                'orderby'        => 'menu_order',
+                'order'          => 'ASC',
+                'meta_query'     => [
+                    [
+                        'key'     => '_ap_optimized',
+                        'compare' => 'NOT EXISTS',
+                    ],
+                ],
+            ];
+
+            if (!empty($failed_ids)) {
+                $args['post__not_in'] = $failed_ids;
+            }
+
+            $images = get_posts($args);
 
             if (empty($images)) {
                 break; // No more images to process
@@ -25,16 +45,13 @@ class WpImageOptimizer implements ImageOptimizerInterface
             foreach ($images as $image) {
                 $result->total_processed++;
 
-                // Check if already optimized
-                if (get_post_meta($image->ID, '_ap_optimized', true)) {
-                    // Skip already optimized images
-                    continue;
-                }
+                // No need to check _ap_optimized here as query filters it.
 
                 $file_path = get_attached_file($image->ID);
 
                 if (!$file_path || !file_exists($file_path)) {
                     $result->errors[] = "File not found for image ID: {$image->ID}";
+                    $failed_ids[] = $image->ID;
                     continue;
                 }
 
@@ -42,6 +59,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                 $backup_path = $file_path . '.bak';
                 if (!copy($file_path, $backup_path)) {
                     $result->errors[] = "Could not create backup for image ID: {$image->ID}";
+                    $failed_ids[] = $image->ID;
                     continue;
                 }
 
@@ -55,6 +73,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                         $result->errors[] = "WP Editor error for image ID {$image->ID}: " . $editor->get_error_message();
                         // Restore backup just in case
                         copy($backup_path, $file_path);
+                        $failed_ids[] = $image->ID;
                         continue;
                     }
 
@@ -68,6 +87,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                     if (is_wp_error($saved)) {
                         $result->errors[] = "Failed to save optimized image ID {$image->ID}: " . $saved->get_error_message();
                         copy($backup_path, $file_path);
+                        $failed_ids[] = $image->ID;
                         continue;
                     }
 
@@ -96,6 +116,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                     copy($backup_path, $file_path);
                     $result->errors[] = "Exception optimizing image ID {$image->ID}: " . $e->getMessage();
                     Logger::error("Optimization exception for image {$image->ID}", ['error' => $e->getMessage()], $project_id);
+                    $failed_ids[] = $image->ID;
                 } finally {
                     // Cleanup backup
                     if (file_exists($backup_path)) {
@@ -103,8 +124,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                     }
                 }
             }
-
-            $offset += $batch_size;
+            // No offset increment as we consume the queue
         }
 
         return $result;
