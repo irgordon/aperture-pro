@@ -11,31 +11,11 @@ get_header();
 <div id="aperture-pro-studio-app">
 
     <!-- ===========================
-         Sticky Header
-    ============================ -->
-    <header class="ap-header sticky">
-        <button class="ap-hamburger" aria-label="Open Menu">
-            <span></span><span></span><span></span>
-        </button>
-
-        <div class="ap-logo">
-            <h1>
-                <a href="<?php echo esc_url(home_url('/')); ?>">
-                    Ian Gordon Photography
-                </a>
-            </h1>
-        </div>
-
-        <a href="#contact" class="ap-cta-header">Book Now</a>
-    </header>
-
-
-    <!-- ===========================
          Hero Masonry Gallery
     ============================ -->
     <section class="ap-hero-gallery" aria-labelledby="gallery-heading">
-        <h2 id="gallery-heading" class="screen-reader-text">
-            Featured Photography Gallery
+        <h2 id="gallery-heading" class="ap-hero-title">
+            Capturing the Soul of the Street & Studio
         </h2>
 
         <div class="ap-masonry-wrapper">
@@ -73,7 +53,7 @@ get_header();
          Wide CTA Section
     ============================ -->
     <section class="ap-wide-cta" aria-labelledby="cta-heading">
-        <h2 id="cta-heading">Ready to Book Your Session?</h2>
+        <h2 id="cta-heading">Ready to Frame Your Story?</h2>
 
         <a href="#contact" class="ap-btn-primary ap-cta-large">
             Book Now
@@ -85,7 +65,7 @@ get_header();
          Contact Section (Optional)
     ============================ -->
     <section id="contact" class="ap-section">
-        <h2 class="ap-section-title">Let’s Make Something Unforgettable</h2>
+        <h2 class="ap-section-title">Let’s Create Art Together</h2>
         <p class="ap-section-subtitle">
             Share a few details and we’ll follow up within one business day.
         </p>
