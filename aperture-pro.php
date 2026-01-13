@@ -11,6 +11,7 @@ require __DIR__ . '/src/Core/Autoloader.php';
 
 AperturePro\Core\Autoloader::register('AperturePro', __DIR__ . '/src');
 AperturePro\Admin\Admin::boot();
+AperturePro\Client\Portal::boot();
 
 add_action('plugins_loaded', function () {
     $plugin = new AperturePro\Core\Plugin();
