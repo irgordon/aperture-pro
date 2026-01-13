@@ -189,6 +189,25 @@
         }
     }
 
+    async function saveClientDetails(projectId, btn) {
+        setLoading(btn, true);
+        const name = document.getElementById('ap-client-name').value;
+        const email = document.getElementById('ap-client-email').value;
+
+        try {
+            // We use the same REST API pattern
+            await post(`projects/${projectId}/client`, {
+                name,
+                email
+            });
+            toast('Client details saved');
+        } catch (e) {
+            handleError(e);
+        } finally {
+            setLoading(btn, false);
+        }
+    }
+
     // ------------------------------------------------------------
     // Event Delegation
     // ------------------------------------------------------------
@@ -197,12 +216,15 @@
         const btn = e.target.closest('[data-ap-action]');
         if (!btn) return;
 
-        const action = btn.dataset.apAction;
+        const action = btn.dataset.apAction || (btn.id === 'ap-save-client-details' ? 'save-client-details' : null);
         const projectId = btn.dataset.projectId;
 
         if (!projectId) return;
 
         switch (action) {
+            case 'save-client-details':
+                saveClientDetails(projectId, btn);
+                break;
             case 'unlock-proofing':
                 unlockProofing(projectId, btn);
                 break;

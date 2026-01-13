@@ -21,6 +21,6 @@ $client_name = get_post_meta($project_id, 'ap_client_name', true);
     </main>
 
     <footer class="ap-client-footer">
-        <p>Powered by Aperture Pro</p>
+        <p><small>Powered by Aperture Pro</small></p>
     </footer>
 </div>

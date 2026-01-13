@@ -19,6 +19,10 @@ class Hooks
 
         // Admin UI hooks
         add_action('ap_admin_project_tabs', [self::class, 'renderAdminProofingTab'], 20, 1);
+        add_action('ap_admin_project_tab_overview', function (int $project_id) {
+            include APERTURE_PRO_PATH . '/templates/admin/project-tabs-overview.php';
+        }, 10, 1);
+
         add_action('ap_admin_project_tab_proofing', function (int $project_id) {
           include APERTURE_PRO_PATH . '/templates/admin/project-tabs-proofing.php';
         }, 10, 1);
