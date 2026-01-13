@@ -3,13 +3,21 @@
 namespace AperturePro\Domain\Delivery\Zip;
 
 use ZipArchive;
+use AperturePro\Domain\Delivery\Zip\Exception\NoImagesFoundException;
 use AperturePro\Storage\StorageManager;
 use AperturePro\Support\Error;
+use AperturePro\Domain\Delivery\Zip\NoImagesFoundException;
 
 class ZipArchiveGenerator implements ZipGeneratorInterface
 {
     public function generate(int $project_id): ZipResult
     {
+        $images = ap_get_project_images($project_id);
+
+        if (empty($images)) {
+            throw new NoImagesFoundException('No images found for project. Cannot generate ZIP file.');
+        }
+
         $tempFile = tempnam(sys_get_temp_dir(), 'ap_zip_');
         $zip = new ZipArchive();
 
