@@ -5,17 +5,20 @@ use AperturePro\Domain\Notification\NotificationService;
 
 if (!function_exists('ap_get_project_images')) {
     /**
-     * Get all images attached to a project.
+     * Get images attached to a project, with pagination support.
      *
      * @param int $project_id
+     * @param int $limit
+     * @param int $offset
      * @return WP_Post[]
      */
-    function ap_get_project_images(int $project_id): array
+    function ap_get_project_images(int $project_id, int $limit = -1, int $offset = 0): array
     {
         return get_posts([
             'post_type'      => 'attachment',
             'post_parent'    => $project_id,
-            'posts_per_page' => -1,
+            'posts_per_page' => $limit,
+            'offset'         => $offset,
             'post_mime_type' => 'image',
             'orderby'        => 'menu_order',
             'order'          => 'ASC',
