@@ -61,6 +61,10 @@ class WpImageOptimizer implements ImageOptimizerInterface
 
                 // No need to check _ap_optimized here as query filters it.
 
+                // Track attempts
+                $prev_data = get_post_meta($image->ID, '_ap_optimization_data', true);
+                $attempts = isset($prev_data['attempts']) ? (int)$prev_data['attempts'] + 1 : 1;
+
                 $file_path = get_attached_file($image->ID);
 
                 if (!$file_path || !file_exists($file_path)) {
@@ -115,14 +119,30 @@ class WpImageOptimizer implements ImageOptimizerInterface
                     // If the new file is larger or same size, revert to original
                     if ($new_size >= $original_size) {
                         copy($backup_path, $file_path);
-                        // We don't mark as optimized because we might want to try again with different settings in future?
-                        // Or we mark it as optimized but with 0 savings so we don't try again.
-                        // For now, let's mark it so we don't loop forever if we retry the job.
-                        update_post_meta($image->ID, '_ap_optimized', 1);
+
+                        update_post_meta($image->ID, '_ap_optimized', 'skipped');
+                        update_post_meta($image->ID, '_ap_optimization_data', [
+                            'status' => 'skipped',
+                            'reason' => 'no_savings',
+                            'original_size' => $original_size,
+                            'new_size' => $new_size,
+                            'timestamp' => time(),
+                            'attempts' => $attempts,
+                        ]);
                     } else {
                         $result->bytes_saved += ($original_size - $new_size);
                         $result->total_optimized++;
-                        update_post_meta($image->ID, '_ap_optimized', 1);
+
+                        update_post_meta($image->ID, '_ap_optimized', 'optimized');
+                        update_post_meta($image->ID, '_ap_optimization_data', [
+                            'status' => 'optimized',
+                            'reason' => 'saved_bytes',
+                            'original_size' => $original_size,
+                            'new_size' => $new_size,
+                            'bytes_saved' => ($original_size - $new_size),
+                            'timestamp' => time(),
+                            'attempts' => $attempts,
+                        ]);
 
                         // Regenerate metadata to ensure thumbnails are also optimized/consistent if needed.
                         // Note: This might be heavy.
