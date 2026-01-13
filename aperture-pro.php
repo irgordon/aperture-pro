@@ -15,6 +15,7 @@ add_action('plugins_loaded', function () {
     $plugin = new AperturePro\Core\Plugin();
     $plugin->boot();
 });
+add_action('ap_run_job', [\AperturePro\Domain\Jobs\JobRunner::class, 'handle'], 10, 1);
 
 register_activation_hook(__FILE__, [AperturePro\Core\Installer::class, 'activate']);
 register_deactivation_hook(__FILE__, [AperturePro\Core\Installer::class, 'deactivate']);
