@@ -8,6 +8,9 @@ class Hooks
 {
     public static function register(): void
     {
+        // Core registration
+        add_action('init', [self::class, 'registerPostTypes']);
+
         // existing hooks...
 
         add_action(ProofingEvents::SUBMITTED, [self::class, 'onProofingSubmitted'], 10, 1);
@@ -66,5 +69,23 @@ class Hooks
         $state = \AperturePro\Domain\Proofing\ProofingRepository::getState($project_id);
 
         include APERTURE_PRO_PATH . '/templates/client/portal-proofing.php';
+    }
+
+    public static function registerPostTypes(): void
+    {
+        register_post_type('ap_project', [
+            'labels'      => [
+                'name'          => 'Projects',
+                'singular_name' => 'Project',
+                'add_new'       => 'New Project',
+                'add_new_item'  => 'Add New Project',
+                'edit_item'     => 'Edit Project',
+            ],
+            'public'      => false,
+            'show_ui'     => true,
+            'supports'    => ['title', 'editor', 'thumbnail'],
+            'menu_icon'   => 'dashicons-camera',
+            'rewrite'     => false,
+        ]);
     }
 }

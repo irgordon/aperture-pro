@@ -22,6 +22,13 @@ AperturePro\Core\Autoloader::register('AperturePro', APERTURE_PRO_PATH . 'src');
 
 /*
 |--------------------------------------------------------------------------
+| Helpers
+|--------------------------------------------------------------------------
+*/
+require_once APERTURE_PRO_PATH . 'src/Support/helpers.php';
+
+/*
+|--------------------------------------------------------------------------
 | Activation / Deactivation
 |--------------------------------------------------------------------------
 */
@@ -60,6 +67,7 @@ add_action('plugins_loaded', function () {
 
     // Client Portal
     AperturePro\Client\Portal::boot();
+    AperturePro\Client\Gallery::boot();
 
     // Shared component library
     add_action('wp_enqueue_scripts', function () {
