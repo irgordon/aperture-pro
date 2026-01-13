@@ -51,13 +51,11 @@ class Gallery
 
             <?php while ($query->have_posts()): $query->the_post(); ?>
                 <?php
-                $img_url = wp_get_attachment_image_url(get_the_ID(), 'large');
                 $full_url = wp_get_attachment_image_url(get_the_ID(), 'full');
-                $alt = get_post_meta(get_the_ID(), '_wp_attachment_image_alt', true) ?: get_the_title();
                 ?>
                 <div class="ap-gallery-item">
                     <a href="<?php echo esc_url($full_url); ?>" class="ap-gallery-link">
-                        <img src="<?php echo esc_url($img_url); ?>" alt="<?php echo esc_attr($alt); ?>" loading="lazy">
+                        <?php echo wp_get_attachment_image(get_the_ID(), 'large', false, ['loading' => 'lazy']); ?>
                     </a>
                 </div>
             <?php endwhile; ?>
