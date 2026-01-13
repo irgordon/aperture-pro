@@ -1,5 +1,6 @@
 <?php
 /** @var WP_Post[] $projects */
+/** @var array $stages */
 ?>
 <div class="wrap ap-wrap">
     <h1 class="wp-heading-inline">Projects</h1>
@@ -28,7 +29,10 @@
                 <?php
                 $project_id = $project->ID;
                 $client     = get_post_meta($project_id, 'ap_client_name', true);
-                $stage      = ap_get_stage($project_id);
+
+                // Use pre-calculated stage from controller if available
+                $stage      = isset($stages[$project_id]) ? $stages[$project_id] : 'Proofing';
+
                 $status     = get_post_status($project_id);
                 $last       = get_post_meta($project_id, 'ap_last_activity', true);
                 ?>

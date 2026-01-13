@@ -23,6 +23,51 @@ class ProjectsScreen
             'post_status'    => ['publish', 'draft'],
         ]);
 
+        // Optimization: Pre-calculate stages to avoid N+1 queries in the template
+        $stages = [];
+        if (!empty($projects)) {
+            global $wpdb;
+            $project_ids = wp_list_pluck($projects, 'ID');
+            $ids_sql     = implode(',', array_map('intval', $project_ids));
+
+            // Batch fetch delivery status
+            $deliveries = $wpdb->get_results("
+                SELECT project_id, status
+                FROM {$wpdb->prefix}ap_delivery
+                WHERE project_id IN ($ids_sql)
+            ");
+
+            $delivery_map = [];
+            foreach ($deliveries as $d) {
+                $delivery_map[$d->project_id] = $d->status;
+            }
+
+            foreach ($projects as $project) {
+                $pid = $project->ID;
+                $stage = 'Proofing';
+
+                // Check Proofing
+                $p_state = get_post_meta($pid, 'ap_proofing_state', true);
+                if ($p_state === 'submitted') {
+                    $stage = 'Review';
+                } elseif ($p_state === 'completed') {
+                    $stage = 'Editing';
+                }
+
+                // Check Delivery
+                if (isset($delivery_map[$pid])) {
+                    $status = $delivery_map[$pid];
+                    if ($status === 'sent') {
+                        $stage = 'Delivered';
+                    } elseif ($status === 'ready') {
+                        $stage = 'Delivery Ready';
+                    }
+                }
+
+                $stages[$pid] = $stage;
+            }
+        }
+
         include APERTURE_PRO_PATH . '/templates/admin/projects-list.php';
     }
 
