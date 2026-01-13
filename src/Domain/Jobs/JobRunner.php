@@ -5,6 +5,8 @@ namespace AperturePro\Domain\Jobs;
 use AperturePro\Domain\Logs\Logger;
 use AperturePro\Domain\Delivery\DeliveryService;
 use AperturePro\Domain\Delivery\Zip\ZipResult;
+use AperturePro\Domain\ImageOptimization\ImageOptimizationService;
+use AperturePro\Domain\ImageOptimization\OptimizationResult;
 
 class JobRunner
 {
@@ -21,6 +23,10 @@ class JobRunner
             switch ($job->type) {
                 case JobTypes::ZIP_GENERATION:
                     self::runZipJob($job);
+                    break;
+
+                case JobTypes::IMAGE_OPTIMIZATION:
+                    self::runImageOptimizationJob($job);
                     break;
 
                 default:
@@ -71,5 +77,16 @@ class JobRunner
         $result = $generator->generate($project_id);
 
         DeliveryService::handleZipSuccess($project_id, $result);
+    }
+
+    protected static function runImageOptimizationJob(Job $job): void
+    {
+        $project_id = $job->project_id;
+
+        $optimizer = ImageOptimizationService::getOptimizer();
+        /** @var OptimizationResult $result */
+        $result = $optimizer->optimize($project_id);
+
+        ImageOptimizationService::handleSuccess($project_id, $result);
     }
 }
