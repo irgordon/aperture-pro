@@ -12,9 +12,11 @@ class Gallery
     public static function renderShortcode($atts = []): string
     {
         $atts = shortcode_atts([
-            'limit'   => 12,
-            'columns' => 3,
-            'ratio'   => 'original', // '4x5', '1x1', etc.
+            'limit'    => 12,
+            'columns'  => 3,
+            'ratio'    => 'original', // '4x5', '1x1', etc.
+            'category' => '',
+            'tag'      => '',
         ], $atts, 'ap_masonry_gallery');
 
         $args = [
@@ -26,8 +28,15 @@ class Gallery
             'order'          => 'DESC',
         ];
 
-        // In a real app, we might filter by a "portfolio" tag or category.
-        // For now, we just grab recent images.
+        if (!empty($atts['category'])) {
+            $args['category_name'] = sanitize_text_field($atts['category']);
+        }
+
+        if (!empty($atts['tag'])) {
+            $args['tag'] = sanitize_text_field($atts['tag']);
+        }
+
+        // Filter by category or tag if provided.
         $query = new \WP_Query($args);
 
         if (!$query->have_posts()) {
