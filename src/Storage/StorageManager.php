@@ -17,6 +17,10 @@ class StorageManager
                 self::$adapter = new LocalStorageAdapter();
                 break;
 
+            case 'imagekit':
+                self::$adapter = new ImageKitAdapter();
+                break;
+
             default:
                 Error::logAndThrow('Unknown storage adapter: ' . $key);
         }

@@ -18,6 +18,7 @@ class StorageSettings
     {
         return [
             'local' => 'Local Storage',
+            'imagekit' => 'ImageKit.io',
             // 's3' => 'Amazon S3 (coming soon)'
         ];
     }

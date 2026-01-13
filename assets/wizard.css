@@ -1,0 +1,130 @@
+/* Global Wizard Styles */
+.ap-wizard-wrap {
+    max-width: 800px;
+    margin: 40px auto;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif;
+    color: #1d2327;
+}
+
+.ap-wizard-header {
+    text-align: center;
+    margin-bottom: 30px;
+}
+.ap-wizard-header h1 {
+    font-size: 2.5em;
+    font-weight: 300;
+    margin-bottom: 10px;
+    color: #2c3338;
+}
+
+/* Stepper */
+.ap-stepper {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 30px;
+    position: relative;
+}
+.ap-stepper::before {
+    content: '';
+    position: absolute;
+    top: 15px;
+    left: 0;
+    width: 100%;
+    height: 2px;
+    background: #e0e0e0;
+    z-index: 1;
+}
+.ap-step-item {
+    position: relative;
+    z-index: 2;
+    background: #f0f0f1;
+    width: 32px;
+    height: 32px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: bold;
+    color: #646970;
+    border: 2px solid #e0e0e0;
+}
+.ap-step-item.active {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+.ap-step-item.completed {
+    background: #2271b1;
+    color: #fff;
+    border-color: #2271b1;
+}
+
+/* Card */
+.ap-wizard-card {
+    background: #fff;
+    border: 1px solid #c3c4c7;
+    padding: 40px;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.05);
+    border-radius: 4px;
+}
+
+/* Form Elements */
+.ap-form-group {
+    margin-bottom: 20px;
+}
+.ap-form-group label {
+    display: block;
+    margin-bottom: 5px;
+    font-weight: 600;
+}
+.ap-form-group input[type="text"],
+.ap-form-group input[type="url"],
+.ap-form-group input[type="number"],
+.ap-form-group select {
+    width: 100%;
+    padding: 8px 12px;
+    border: 1px solid #8c8f94;
+    border-radius: 4px;
+    font-size: 16px;
+}
+.ap-form-text {
+    font-size: 13px;
+    color: #646970;
+    margin-top: 5px;
+}
+
+/* Buttons */
+.ap-wizard-actions {
+    margin-top: 30px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+.ap-btn {
+    padding: 10px 20px;
+    cursor: pointer;
+    border: none;
+    border-radius: 4px;
+    font-size: 14px;
+    font-weight: 500;
+}
+.ap-btn-primary {
+    background: #2271b1;
+    color: #fff;
+}
+.ap-btn-secondary {
+    background: #f0f0f1;
+    color: #2c3338;
+    border: 1px solid #c3c4c7;
+}
+
+/* Success State */
+.ap-success-icon {
+    font-size: 60px;
+    color: #46b450;
+    text-align: center;
+    margin-bottom: 20px;
+}
+.ap-congrats {
+    text-align: center;
+}

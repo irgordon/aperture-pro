@@ -58,6 +58,7 @@ add_action('plugins_loaded', function () {
         (new AperturePro\Http\Rest\DeliveryController())->register_routes();
         (new AperturePro\Http\Rest\TokenController())->register_routes();
         (new AperturePro\Http\Rest\JobsController())->register_routes();
+        (new AperturePro\Http\Rest\WizardController())->register_routes();
     });
 
     // Admin UI
