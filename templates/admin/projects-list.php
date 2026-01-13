@@ -3,6 +3,7 @@
 ?>
 <div class="wrap ap-wrap">
     <h1 class="wp-heading-inline">Projects</h1>
+    <a href="<?php echo esc_url(admin_url('post-new.php?post_type=ap_project')); ?>" class="page-title-action">Add New</a>
 
     <table class="wp-list-table widefat fixed striped">
         <thead>
@@ -16,7 +17,12 @@
         </thead>
         <tbody>
         <?php if (empty($projects)) : ?>
-            <tr><td colspan="5">No projects found.</td></tr>
+            <tr>
+                <td colspan="5" class="ap-empty-state">
+                    <p>No projects found.</p>
+                    <a href="<?php echo esc_url(admin_url('post-new.php?post_type=ap_project')); ?>" class="button button-primary">Create your first project</a>
+                </td>
+            </tr>
         <?php else : ?>
             <?php foreach ($projects as $project) : ?>
                 <?php

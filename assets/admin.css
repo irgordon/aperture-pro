@@ -272,6 +272,49 @@ button[data-loading="1"]::after {
 }
 
 /* --------------------------------------------------------------
+   Overview Tab
+-------------------------------------------------------------- */
+
+.ap-overview-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+}
+
+.ap-form-group {
+    margin-bottom: 15px;
+}
+
+.ap-form-group label {
+    display: block;
+    font-weight: 600;
+    margin-bottom: 5px;
+}
+
+.ap-status-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #eee;
+}
+
+.ap-status-row:last-child {
+    border-bottom: none;
+}
+
+.ap-empty-state {
+    text-align: center;
+    padding: 40px !important;
+}
+
+.ap-empty-state p {
+    font-size: 16px;
+    margin-bottom: 20px;
+    color: #64748b;
+}
+
+/* --------------------------------------------------------------
    Responsive
 -------------------------------------------------------------- */
 
@@ -283,5 +326,9 @@ button[data-loading="1"]::after {
 
     .ap-grid {
         grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+    }
+
+    .ap-overview-grid {
+        grid-template-columns: 1fr;
     }
 }
