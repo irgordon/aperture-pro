@@ -13,6 +13,7 @@ class Installer
     {
         self::runMigrations();
         self::migrateData();
+        self::migrateDeliveryData();
         update_option('ap_db_version', self::VERSION);
 
         // Trigger wizard on first install
@@ -115,6 +116,41 @@ class Installer
             Logger::info('Proofing data migrated to custom table');
         } catch (\Throwable $e) {
             Logger::error('Proofing data migration failed', ['error' => $e->getMessage()]);
+        }
+    }
+
+    protected static function migrateDeliveryData(): void
+    {
+        global $wpdb;
+        $deliveryTable = $wpdb->prefix . 'ap_delivery';
+
+        // Check if delivery table is empty
+        if ($wpdb->get_var("SELECT COUNT(*) FROM $deliveryTable") > 0) {
+            return;
+        }
+
+        // Migrate postmeta to ap_delivery
+        // We need zip_url, zip_size, zip_date
+        $sql = "
+            INSERT INTO $deliveryTable (project_id, zip_path, zip_size, status, created_at, updated_at)
+            SELECT
+                pm_url.post_id as project_id,
+                pm_url.meta_value as zip_path,
+                COALESCE(pm_size.meta_value, 0) as zip_size,
+                'ready' as status,
+                COALESCE(pm_date.meta_value, NOW()) as created_at,
+                COALESCE(pm_date.meta_value, NOW()) as updated_at
+            FROM {$wpdb->postmeta} pm_url
+            LEFT JOIN {$wpdb->postmeta} pm_size ON pm_size.post_id = pm_url.post_id AND pm_size.meta_key = 'ap_delivery_zip_size'
+            LEFT JOIN {$wpdb->postmeta} pm_date ON pm_date.post_id = pm_url.post_id AND pm_date.meta_key = 'ap_delivery_zip_date'
+            WHERE pm_url.meta_key = 'ap_delivery_zip_url'
+        ";
+
+        try {
+            $wpdb->query($sql);
+            Logger::info('Delivery data migrated to custom table');
+        } catch (\Throwable $e) {
+            Logger::error('Delivery data migration failed', ['error' => $e->getMessage()]);
         }
     }
 }

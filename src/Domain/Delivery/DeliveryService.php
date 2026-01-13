@@ -17,9 +17,7 @@ class DeliveryService
 
     public static function handleZipSuccess(int $project_id, ZipResult $result): void
     {
-        update_post_meta($project_id, 'ap_delivery_zip_url', $result->path);
-        update_post_meta($project_id, 'ap_delivery_zip_size', $result->size);
-        update_post_meta($project_id, 'ap_delivery_zip_date', current_time('mysql'));
+        DeliveryRepository::save($project_id, $result->path, $result->size);
 
         Logger::info('ZIP generation successful', [
             'url'  => $result->path,
