@@ -16,17 +16,27 @@ class OptimizationResult
     /** @var array */
     public $errors = [];
 
+    /** @var bool */
+    public $completed = true;
+
     /**
      * @param int $total_processed
      * @param int $total_optimized
      * @param int $bytes_saved
      * @param array $errors
+     * @param bool $completed
      */
-    public function __construct(int $total_processed = 0, int $total_optimized = 0, int $bytes_saved = 0, array $errors = [])
-    {
+    public function __construct(
+        int $total_processed = 0,
+        int $total_optimized = 0,
+        int $bytes_saved = 0,
+        array $errors = [],
+        bool $completed = true
+    ) {
         $this->total_processed = $total_processed;
         $this->total_optimized = $total_optimized;
         $this->bytes_saved = $bytes_saved;
         $this->errors = $errors;
+        $this->completed = $completed;
     }
 }
