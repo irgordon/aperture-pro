@@ -32,7 +32,7 @@ class JobRunner
                     break;
 
                 case JobTypes::EMAIL_BATCH:
-                    self::runEmailBatchJob($job);
+                    $finished = self::runEmailBatchJob($job);
                     break;
 
                 default:
@@ -109,7 +109,7 @@ class JobRunner
         return $result->completed;
     }
 
-    protected static function runEmailBatchJob(Job $job): void
+    protected static function runEmailBatchJob(Job $job): bool
     {
         $payload = $job->payloadArray();
         $recipients = $payload['recipients'] ?? [];
@@ -120,17 +120,32 @@ class JobRunner
             throw new \RuntimeException('Invalid payload for email batch job.');
         }
 
+        // Process in batches of 20 to avoid timeouts
+        $batchSize = 20;
+        $currentBatch = array_slice($recipients, 0, $batchSize);
+        $remaining = array_slice($recipients, $batchSize);
+
         $service = new NotificationService();
-        $failed = $service->sendBatch($recipients, $subject, $message);
+        $failed = $service->sendBatch($currentBatch, $subject, $message);
 
         if (!empty($failed)) {
             Logger::warning('Some emails failed to send in batch job ' . $job->id, [
                 'failed_recipients' => $failed,
             ], $job->project_id);
 
-            if (count($failed) === count($recipients)) {
-                throw new \RuntimeException('All emails failed to send.');
+            // If the entire current batch failed, we might want to throw an exception
+            // to trigger a retry. If it's a mix, we proceed.
+            if (count($failed) === count($currentBatch)) {
+                throw new \RuntimeException('All emails in current batch failed to send.');
             }
         }
+
+        if (!empty($remaining)) {
+            $payload['recipients'] = $remaining;
+            JobRepository::updatePayload($job, $payload);
+            return false; // Not finished
+        }
+
+        return true; // Finished
     }
 }

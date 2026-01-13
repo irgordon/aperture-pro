@@ -79,4 +79,20 @@ class JobRepository
             ['%d']
         );
     }
+
+    public static function updatePayload(Job $job, array $payload): void
+    {
+        global $wpdb;
+
+        $wpdb->update(
+            self::table(),
+            [
+                'payload'    => wp_json_encode($payload),
+                'updated_at' => current_time('mysql'),
+            ],
+            ['id' => $job->id],
+            ['%s', '%s'],
+            ['%d']
+        );
+    }
 }
