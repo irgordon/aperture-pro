@@ -1,6 +1,7 @@
 <?php
 
 use AperturePro\Domain\Logs\Logger;
+use AperturePro\Domain\Notification\NotificationService;
 
 if (!function_exists('ap_get_project_images')) {
     /**
@@ -34,11 +35,27 @@ if (!function_exists('ap_notify')) {
      */
     function ap_notify(int $project_id, string $recipient, string $type, string $message): void
     {
-        // Mock notification for now
-        Logger::info("Notification sent to {$recipient}", [
-            'type'       => $type,
-            'message'    => $message,
-            'project_id' => $project_id,
-        ], $project_id);
+        // Use NotificationService for email sending
+        // This acts as a facade or bridge to the service
+        $service = new NotificationService();
+
+        $email = null;
+        if ($recipient === 'client') {
+            $email = $service->getClientEmail($project_id);
+        } elseif ($recipient === 'admin') {
+            $email = get_option('admin_email');
+        }
+
+        if ($email) {
+             // Derive a basic subject from the type
+             $subject = "Notification: " . str_replace('_', ' ', ucfirst($type));
+             $service->sendEmail($email, $subject, $message);
+        } else {
+             Logger::info("Notification skipped for {$recipient} (no email found)", [
+                'type'       => $type,
+                'message'    => $message,
+                'project_id' => $project_id,
+            ], $project_id);
+        }
     }
 }

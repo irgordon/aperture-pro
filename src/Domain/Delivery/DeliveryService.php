@@ -6,6 +6,7 @@ use AperturePro\Domain\Delivery\Zip\ZipGeneratorInterface;
 use AperturePro\Domain\Delivery\Zip\ZipArchiveGenerator;
 use AperturePro\Domain\Delivery\Zip\ZipResult;
 use AperturePro\Domain\Logs\Logger;
+use AperturePro\Domain\Notification\NotificationService;
 
 class DeliveryService
 {
@@ -25,6 +26,8 @@ class DeliveryService
             'size' => $result->size,
         ], $project_id);
 
-        // Notify client? Maybe not automatically, usually admin sends link manually.
+        // Notify client automatically
+        $notificationService = new NotificationService();
+        $notificationService->sendClientZipReadyEmail($project_id, $result->path);
     }
 }
