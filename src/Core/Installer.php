@@ -2,68 +2,73 @@
 
 namespace AperturePro\Core;
 
+use AperturePro\Domain\Logs\Logger;
+
 class Installer
 {
+    // Bump this when you add new migrations
+    public const VERSION = '1.0.0';
+
     public static function activate(): void
     {
-        self::create_tables();
-        update_option('ap_db_version', '1.0.0');
+        self::runMigrations();
+        update_option('ap_db_version', self::VERSION);
     }
 
     public static function deactivate(): void
     {
-        // unschedule jobs, etc.
+        // Unschedule jobs, timers, etc.
+        wp_clear_scheduled_hook('ap_run_job');
     }
 
-    protected static function create_tables(): void
+    /**
+     * Run all pending migrations in order.
+     * Idempotent: only runs migrations newer than stored version.
+     */
+    protected static function runMigrations(): void
     {
         global $wpdb;
         require_once ABSPATH . 'wp-admin/includes/upgrade.php';
 
-        $charset = $wpdb->get_charset_collate();
-        $jobs    = $wpdb->prefix . 'ap_jobs';
-        $tokens  = $wpdb->prefix . 'ap_tokens';
-        $logs    = $wpdb->prefix . 'ap_logs';
+        $installed = get_option('ap_db_version', '0.0.0');
 
-        $sql = "
-        CREATE TABLE $jobs (
-          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          project_id BIGINT UNSIGNED NOT NULL,
-          type VARCHAR(50) NOT NULL,
-          status VARCHAR(20) NOT NULL,
-          attempts TINYINT UNSIGNED NOT NULL DEFAULT 0,
-          max_attempts TINYINT UNSIGNED NOT NULL DEFAULT 3,
-          last_error TEXT NULL,
-          created_at DATETIME NOT NULL,
-          updated_at DATETIME NOT NULL,
-          KEY project_status (project_id, status),
-          KEY created_at (created_at)
-        ) $charset;
+        $migrationsDir = __DIR__ . '/../../sql/migrations';
+        if (!is_dir($migrationsDir)) {
+            return;
+        }
 
-        CREATE TABLE $tokens (
-          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          project_id BIGINT UNSIGNED NOT NULL,
-          token CHAR(64) NOT NULL,
-          type VARCHAR(20) NOT NULL,
-          used TINYINT(1) NOT NULL DEFAULT 0,
-          expires_at DATETIME NOT NULL,
-          created_at DATETIME NOT NULL,
-          UNIQUE KEY token (token),
-          KEY project_type (project_id, type)
-        ) $charset;
+        $files = glob($migrationsDir . '/*.sql') ?: [];
+        usort($files, static function ($a, $b) {
+            return strcmp(basename($a), basename($b));
+        });
 
-        CREATE TABLE $logs (
-          id BIGINT UNSIGNED AUTO_INCREMENT PRIMARY KEY,
-          project_id BIGINT UNSIGNED NULL,
-          level VARCHAR(20) NOT NULL,
-          message TEXT NOT NULL,
-          context LONGTEXT NULL,
-          created_at DATETIME NOT NULL,
-          KEY project_level (project_id, level),
-          KEY created_at (created_at)
-        ) $charset;
-        ";
+        foreach ($files as $file) {
+            // Convention: 001_create_core_tables.sql → "001"
+            $basename = basename($file);
+            $versionKey = substr($basename, 0, 3);
 
-        dbDelta($sql);
+            // Only run if not yet applied
+            if (version_compare($installed, $versionKey, '>=')) {
+                continue;
+            }
+
+            $sql = file_get_contents($file);
+            if ($sql === false) {
+                Logger::error('Failed to read migration file', ['file' => $file]);
+                continue;
+            }
+
+            try {
+                dbDelta($sql);
+                Logger::info('Migration applied', ['file' => $file, 'version' => $versionKey]);
+            } catch (\Throwable $e) {
+                Logger::error('Migration failed', [
+                    'file'   => $file,
+                    'error'  => $e->getMessage(),
+                ]);
+                // Do not silently swallow; log and stop further migrations
+                break;
+            }
+        }
     }
 }
