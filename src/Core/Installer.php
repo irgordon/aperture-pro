@@ -3,6 +3,7 @@
 namespace AperturePro\Core;
 
 use AperturePro\Domain\Logs\Logger;
+use AperturePro\Core\Migration\SchemaManager;
 
 class Installer
 {
@@ -11,7 +12,7 @@ class Installer
 
     public static function activate(): void
     {
-        self::runMigrations();
+        (new SchemaManager())->migrate();
         self::migrateData();
         self::migrateDeliveryData();
         update_option('ap_db_version', self::VERSION);
@@ -28,61 +29,14 @@ class Installer
         wp_clear_scheduled_hook('ap_run_job');
     }
 
-    /**
-     * Run all pending migrations in order.
-     * Idempotent: only runs migrations newer than stored version.
-     */
-    protected static function runMigrations(): void
-    {
-        global $wpdb;
-        require_once ABSPATH . 'wp-admin/includes/upgrade.php';
-
-        $installed = get_option('ap_db_version', '0.0.0');
-
-        $migrationsDir = __DIR__ . '/../../sql/migrations';
-        if (!is_dir($migrationsDir)) {
-            return;
-        }
-
-        $files = glob($migrationsDir . '/*.sql') ?: [];
-        usort($files, static function ($a, $b) {
-            return strcmp(basename($a), basename($b));
-        });
-
-        foreach ($files as $file) {
-            // Convention: 001_create_core_tables.sql → "001"
-            $basename = basename($file);
-            $versionKey = substr($basename, 0, 3);
-
-            // Only run if not yet applied
-            if (version_compare($installed, $versionKey, '>=')) {
-                continue;
-            }
-
-            $sql = file_get_contents($file);
-            if ($sql === false) {
-                Logger::error('Failed to read migration file', ['file' => $file]);
-                continue;
-            }
-
-            try {
-                dbDelta($sql);
-                Logger::info('Migration applied', ['file' => $file, 'version' => $versionKey]);
-            } catch (\Throwable $e) {
-                Logger::error('Migration failed', [
-                    'file'   => $file,
-                    'error'  => $e->getMessage(),
-                ]);
-                // Do not silently swallow; log and stop further migrations
-                break;
-            }
-        }
-    }
-
     protected static function migrateData(): void
     {
         global $wpdb;
         $proofingTable = $wpdb->prefix . 'ap_proofing';
+
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $proofingTable)) !== $proofingTable) {
+            return;
+        }
 
         // Check if proofing table is empty to avoid double migration
         if ($wpdb->get_var("SELECT COUNT(*) FROM $proofingTable") > 0) {
@@ -123,6 +77,10 @@ class Installer
     {
         global $wpdb;
         $deliveryTable = $wpdb->prefix . 'ap_delivery';
+
+        if ($wpdb->get_var($wpdb->prepare("SHOW TABLES LIKE %s", $deliveryTable)) !== $deliveryTable) {
+            return;
+        }
 
         // Check if delivery table is empty
         if ($wpdb->get_var("SELECT COUNT(*) FROM $deliveryTable") > 0) {

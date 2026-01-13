@@ -16,6 +16,11 @@ class HealthManager
             new EnvironmentHealthCheck(),
             new JobsHealthCheck(),
             new EmailHealthCheck(),
+            new StorageHealthCheck(),
+            new CronHealthCheck(),
+            new QueueHealthCheck(),
+            new TokenHealthCheck(),
+            new DiskSpaceHealthCheck(),
         ];
 
         return $checks;
