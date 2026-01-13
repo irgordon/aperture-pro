@@ -1,81 +1,151 @@
 <?php
-if (!defined('ABSPATH')) {
-    exit;
-}
+/**
+ * Front Page Template for Aperture Pro Studio Theme
+ */
+
+if (!defined('ABSPATH')) exit;
+
 get_header();
 ?>
+
 <div id="aperture-pro-studio-app">
-    <section class="ap-hero">
-        <div>
-            <h1 class="ap-hero-title">
-                Cinematic photography<br>for modern brands & couples.
+
+    <!-- ===========================
+         Sticky Header
+    ============================ -->
+    <header class="ap-header sticky">
+        <button class="ap-hamburger" aria-label="Open Menu">
+            <span></span><span></span><span></span>
+        </button>
+
+        <div class="ap-logo">
+            <h1>
+                <a href="<?php echo esc_url(home_url('/')); ?>">
+                    Ian Gordon Photography
+                </a>
             </h1>
-            <p class="ap-hero-subtitle">
-                From intimate weddings to bold commercial campaigns, we craft images that feel like memories from the future.
-            </p>
-            <div class="ap-hero-cta">
-                <a href="#contact" class="ap-btn-primary">Book a consultation</a>
-                <a href="#portfolio" class="ap-btn-secondary">View portfolio</a>
-            </div>
         </div>
-        <div class="ap-hero-media">
-            <div class="ap-hero-media-inner">
-                Powered by Aperture Pro — seamless proofing & delivery for every shoot.
-            </div>
+
+        <a href="#contact" class="ap-cta-header">Book Now</a>
+    </header>
+
+
+    <!-- ===========================
+         Hero Masonry Gallery
+    ============================ -->
+    <section class="ap-hero-gallery" aria-labelledby="gallery-heading">
+        <h2 id="gallery-heading" class="screen-reader-text">
+            Featured Photography Gallery
+        </h2>
+
+        <div class="ap-masonry-wrapper">
+            <?php echo do_shortcode('[ap_masonry_gallery limit="12" columns="3"]'); ?>
         </div>
+
+        <button class="ap-btn-primary ap-view-portfolio" data-open-portfolio>
+            View Full Portfolio
+        </button>
     </section>
 
-    <section id="services" class="ap-section">
-        <div class="ap-section-header">
-            <h2 class="ap-section-title">Services</h2>
-            <p class="ap-section-subtitle">Tailored coverage for every story.</p>
-        </div>
-        <div class="ap-projects-grid">
-            <div class="ap-project-card">
-                <div class="ap-project-body">
-                    <div class="ap-project-title">Weddings & Elopements</div>
-                    <div class="ap-project-meta">Full‑day coverage, multi‑day events, destination stories.</div>
-                </div>
-            </div>
-            <div class="ap-project-card">
-                <div class="ap-project-body">
-                    <div class="ap-project-title">Brand & Editorial</div>
-                    <div class="ap-project-meta">Campaigns, lookbooks, founder portraits, product stories.</div>
-                </div>
-            </div>
-            <div class="ap-project-card">
-                <div class="ap-project-body">
-                    <div class="ap-project-title">Families & Milestones</div>
-                    <div class="ap-project-meta">Lifestyle sessions, newborn, anniversaries, legacy albums.</div>
-                </div>
+
+    <!-- ===========================
+         Fullscreen Portfolio Modal
+    ============================ -->
+    <div id="ap-portfolio-modal"
+         class="ap-modal"
+         aria-hidden="true"
+         role="dialog"
+         aria-labelledby="portfolio-title">
+
+        <div class="ap-modal-content">
+            <button class="ap-modal-close" aria-label="Close Portfolio">&times;</button>
+
+            <h2 id="portfolio-title">Portfolio</h2>
+
+            <div class="ap-portfolio-grid">
+                <?php echo do_shortcode('[ap_masonry_gallery limit="20" columns="5" ratio="4x5"]'); ?>
             </div>
         </div>
+    </div>
+
+
+    <!-- ===========================
+         Wide CTA Section
+    ============================ -->
+    <section class="ap-wide-cta" aria-labelledby="cta-heading">
+        <h2 id="cta-heading">Ready to Book Your Session?</h2>
+
+        <a href="#contact" class="ap-btn-primary ap-cta-large">
+            Book Now
+        </a>
     </section>
 
-    <section id="portfolio" class="ap-section">
-        <div class="ap-section-header">
-            <h2 class="ap-section-title">Featured Projects</h2>
-            <p class="ap-section-subtitle">Curated sessions pulled live from our Aperture Pro backend.</p>
-        </div>
-        <div id="ap-studio-featured-projects" class="ap-projects-grid">
-            <!-- studio-app.js will hydrate this via REST -->
-        </div>
-    </section>
 
+    <!-- ===========================
+         Contact Section (Optional)
+    ============================ -->
     <section id="contact" class="ap-section">
-        <div class="ap-section-header">
-            <h2 class="ap-section-title">Let’s make something unforgettable.</h2>
-            <p class="ap-section-subtitle">Share a few details and we’ll follow up within one business day.</p>
-        </div>
-        <div class="ap-project-card">
-            <div class="ap-project-body">
-                <?php
-                // You can swap this for Gravity Forms, WPForms, etc.
-                echo do_shortcode('[contact-form-7 id="123" title="Studio Contact"]');
-                ?>
-            </div>
+        <h2 class="ap-section-title">Let’s Make Something Unforgettable</h2>
+        <p class="ap-section-subtitle">
+            Share a few details and we’ll follow up within one business day.
+        </p>
+
+        <div class="ap-contact-card">
+            <?php
+            // Replace with your preferred form plugin
+            echo do_shortcode('[contact-form-7 id="123" title="Studio Contact"]');
+            ?>
         </div>
     </section>
-</div>
+
+
+    <!-- ===========================
+         Footer
+    ============================ -->
+    <footer class="ap-footer">
+        <div class="ap-social-icons">
+
+            <a href="https://instagram.com/yourstudio" aria-label="Instagram">
+                <?php include get_template_directory() . '/assets/icons/instagram.svg'; ?>
+            </a>
+
+            <a href="https://facebook.com/yourstudio" aria-label="Facebook">
+                <?php include get_template_directory() . '/assets/icons/facebook.svg'; ?>
+            </a>
+
+            <a href="https://tiktok.com/@yourstudio" aria-label="TikTok">
+                <?php include get_template_directory() . '/assets/icons/tiktok.svg'; ?>
+            </a>
+
+        </div>
+
+        <button class="ap-terms-link" data-open-terms>
+            Terms & Conditions
+        </button>
+    </footer>
+
+
+    <!-- ===========================
+         Terms & Conditions Modal
+    ============================ -->
+    <div id="ap-terms-modal"
+         class="ap-modal"
+         aria-hidden="true"
+         role="dialog"
+         aria-labelledby="terms-title">
+
+        <div class="ap-modal-content">
+            <button class="ap-modal-close" aria-label="Close Terms">&times;</button>
+
+            <h2 id="terms-title">Terms & Conditions</h2>
+
+            <div class="ap-terms-body">
+                <?php echo wpautop(get_option('ap_terms_content')); ?>
+            </div>
+        </div>
+    </div>
+
+</div><!-- #aperture-pro-studio-app -->
+
 <?php
 get_footer();
