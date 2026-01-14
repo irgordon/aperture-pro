@@ -260,3 +260,29 @@ footer { background: var(--white); color: var(--text-light); padding: 4rem 0 2re
     .masonry-grid { column-count: 3; }
     .types-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
+/* --- UTILITIES --- */
+.text-primary { color: var(--primary); }
+.text-center { text-align: center; }
+.text-left { text-align: left; }
+.mt-1 { margin-top: 1rem; }
+.mt-2 { margin-top: 2rem; }
+.mt-3 { margin-top: 3rem; }
+.mb-1 { margin-bottom: 1rem; }
+.mb-1-5 { margin-bottom: 1.5rem; }
+.mb-2 { margin-bottom: 2rem; }
+.mb-3 { margin-bottom: 3rem; }
+.ml-1 { margin-left: 10px; }
+.mr-1 { margin-right: 10px; }
+.w-full { width: 100%; }
+.bg-light { background-color: var(--light); }
+.bg-light-alt { background-color: #F9FAFB; }
+.relative { position: relative; }
+.z-2 { z-index: 2; }
+
+.hero-text { max-width: 800px; margin: 1.5rem auto; line-height: 1.8; }
+.card-decoration { position: absolute; top: 0; left: 0; width: 100%; height: 5px; }
+.bg-primary { background-color: var(--primary); }
+.bg-accent { background-color: var(--accent); }
+
+.btn-header { padding: 0.6rem 1.5rem; font-size: 1rem; }
