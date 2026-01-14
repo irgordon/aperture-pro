@@ -3,13 +3,20 @@
 namespace AperturePro\Domain\Shop;
 
 use AperturePro\Core\BioSettings;
+use AperturePro\Support\Cache;
 
 class PrintfulService
 {
     private const API_URL = 'https://api.printful.com';
+    private const CACHE_KEY = 'ap_printful_products';
 
     public function getProducts(): array
     {
+        $cached = Cache::get(self::CACHE_KEY);
+        if ($cached) {
+            return $cached;
+        }
+
         $settings = BioSettings::getSettings();
         $apiKey = $settings['printfulKey'] ?? '';
 
@@ -35,7 +42,7 @@ class PrintfulService
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
         if (isset($body['result'])) {
-            return array_map(function ($item) {
+            $products = array_map(function ($item) {
                 return [
                     'id' => $item['id'],
                     'name' => $item['name'],
@@ -44,6 +51,9 @@ class PrintfulService
                     'url' => $item['external_url'] ?? '#', // Assuming external_url exists or we link to detail
                 ];
             }, $body['result']);
+
+            Cache::set(self::CACHE_KEY, $products, HOUR_IN_SECONDS);
+            return $products;
         }
 
         return $this->getMockProducts();
