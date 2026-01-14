@@ -70,6 +70,7 @@
             if (settings.profileImage) document.getElementById('bio-profile-image').value = settings.profileImage;
             if (settings.name) document.getElementById('bio-name').value = settings.name;
             if (settings.description) document.getElementById('bio-description').value = settings.description;
+            if (settings.primaryColor) document.getElementById('bio-primary-color').value = settings.primaryColor;
 
             if (settings.donationEnabled) document.getElementById('bio-donation-enabled').checked = true;
             if (settings.donationLink) document.getElementById('bio-donation-link').value = settings.donationLink;
@@ -109,6 +110,7 @@
             profileImage: document.getElementById('bio-profile-image').value,
             name: document.getElementById('bio-name').value,
             description: document.getElementById('bio-description').value,
+            primaryColor: document.getElementById('bio-primary-color').value,
             donationEnabled: document.getElementById('bio-donation-enabled').checked,
             donationLink: document.getElementById('bio-donation-link').value,
             shopEnabled: document.getElementById('bio-shop-enabled').checked,

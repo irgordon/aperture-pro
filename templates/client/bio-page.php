@@ -20,7 +20,9 @@ if ($settings['shopEnabled']) {
     <title><?php echo esc_html($settings['name'] ?: 'Link In Bio'); ?></title>
     <?php wp_head(); ?>
     <style>
-        /* Inline critical CSS or reset if needed, but bio.css should handle it */
+        :root {
+            --ap-bio-primary: <?php echo esc_attr($settings['primaryColor'] ?: '#0073aa'); ?>;
+        }
         body { margin: 0; background: #f0f2f5; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Oxygen-Sans, Ubuntu, Cantarell, "Helvetica Neue", sans-serif; }
     </style>
 </head>
