@@ -24,6 +24,11 @@ if (!defined('ABSPATH')) {
                     <span class="logo-subtitle">Photography</span>
                 </div>
             </a>
+            <button class="ap-hamburger" aria-label="Menu">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
             <div class="nav-actions">
                 <a href="<?php echo esc_url(home_url('/portal')); ?>" class="btn btn-secondary btn-header mr-1">Client Login</a>
                 <a href="#contact" onclick="closeModal()" class="btn btn-primary btn-header">Book Session</a>

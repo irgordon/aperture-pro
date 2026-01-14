@@ -286,3 +286,81 @@ footer { background: var(--white); color: var(--text-light); padding: 4rem 0 2re
 .bg-accent { background-color: var(--accent); }
 
 .btn-header { padding: 0.6rem 1.5rem; font-size: 1rem; }
+
+/* --- HAMBURGER MENU --- */
+.ap-hamburger {
+    display: none;
+    flex-direction: column;
+    justify-content: space-around;
+    width: 30px;
+    height: 24px;
+    background: transparent;
+    border: none;
+    cursor: pointer;
+    padding: 0;
+    z-index: 1100;
+}
+
+.ap-hamburger span {
+    width: 30px;
+    height: 3px;
+    background: var(--dark);
+    border-radius: 10px;
+    transition: all 0.3s linear;
+    position: relative;
+    transform-origin: 1px;
+}
+
+.ap-hamburger.active span:nth-child(1) {
+    transform: rotate(45deg);
+}
+
+.ap-hamburger.active span:nth-child(2) {
+    opacity: 0;
+    transform: translateX(20px);
+}
+
+.ap-hamburger.active span:nth-child(3) {
+    transform: rotate(-45deg);
+}
+
+@media (max-width: 767px) {
+    .ap-hamburger {
+        display: flex;
+    }
+
+    .nav-actions {
+        display: none;
+        position: absolute;
+        top: 100%;
+        left: 0;
+        width: 100%;
+        background: var(--white);
+        flex-direction: column;
+        align-items: center;
+        padding: 2rem;
+        box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1);
+        border-bottom: 1px solid var(--light);
+        z-index: 1000;
+    }
+
+    .nav-actions.active {
+        display: flex;
+        animation: slideDown 0.3s ease-in-out;
+    }
+
+    .nav-actions .btn {
+        width: 100%;
+        margin: 0.5rem 0;
+        text-align: center;
+    }
+
+    .nav-actions .mr-1 {
+        margin-right: 0;
+    }
+}
+
+@keyframes slideDown {
+    from { opacity: 0; transform: translateY(-10px); }
+    to { opacity: 1; transform: translateY(0); }
+}
