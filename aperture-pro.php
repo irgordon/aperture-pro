@@ -59,6 +59,7 @@ add_action('plugins_loaded', function () {
         (new AperturePro\Http\Rest\TokenController())->register_routes();
         (new AperturePro\Http\Rest\JobsController())->register_routes();
         (new AperturePro\Http\Rest\WizardController())->register_routes();
+        (new AperturePro\Http\Rest\BioController())->register_routes();
     });
 
     // Admin UI
@@ -69,6 +70,7 @@ add_action('plugins_loaded', function () {
     // Client Portal
     AperturePro\Client\Portal::boot();
     AperturePro\Client\Gallery::boot();
+    AperturePro\Client\BioPage::boot();
 
     // Shared component library
     add_action('wp_enqueue_scripts', function () {
