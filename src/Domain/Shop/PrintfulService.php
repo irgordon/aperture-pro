@@ -3,6 +3,7 @@
 namespace AperturePro\Domain\Shop;
 
 use AperturePro\Core\BioSettings;
+use AperturePro\Domain\Logs\Logger;
 use AperturePro\Support\Cache;
 
 class PrintfulService
@@ -33,11 +34,16 @@ class PrintfulService
         ]);
 
         if (is_wp_error($response) || wp_remote_retrieve_response_code($response) !== 200) {
+            $error_message = is_wp_error($response) ? $response->get_error_message() : 'API request failed';
+            Logger::warning('Printful API Error', [
+                'code' => wp_remote_retrieve_response_code($response),
+                'message' => $error_message,
+            ]);
             // Log error if needed, for now fallback to mock or empty
             // But prompt says "mock response if API key is missing".
             // If key is present but fails, maybe we should return empty to indicate error?
-            // For robustness in this demo, let's fallback to mock if the fetch fails so the UI always looks good.
-            return $this->getMockProducts();
+            // If the API key is present but the request fails, return empty.
+            return [];
         }
 
         $body = json_decode(wp_remote_retrieve_body($response), true);
