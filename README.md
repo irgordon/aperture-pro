@@ -218,7 +218,7 @@ do_action('ap_admin_project_tabs', $project_id);
 
 ## License
 
-Commercial license. All rights reserved.
+GPL-3 license. All rights reserved.
 
 ## Support
 
