@@ -48,6 +48,36 @@
         }
     });
 
+    // --- 4. HAMBURGER MENU ---
+    document.addEventListener('DOMContentLoaded', () => {
+        const hamburger = document.querySelector('.ap-hamburger');
+        const navActions = document.querySelector('.nav-actions');
+
+        if (hamburger && navActions) {
+            hamburger.addEventListener('click', (e) => {
+                e.stopPropagation();
+                hamburger.classList.toggle('active');
+                navActions.classList.toggle('active');
+            });
+
+            // Close menu when a link inside it is clicked
+            navActions.querySelectorAll('a').forEach(link => {
+                link.addEventListener('click', () => {
+                    hamburger.classList.remove('active');
+                    navActions.classList.remove('active');
+                });
+            });
+
+            // Close menu when clicking outside
+            document.addEventListener('click', (e) => {
+                if (!hamburger.contains(e.target) && !navActions.contains(e.target) && navActions.classList.contains('active')) {
+                    hamburger.classList.remove('active');
+                    navActions.classList.remove('active');
+                }
+            });
+        }
+    });
+
     // --- 2. GALLERY FILTER LOGIC ---
     window.filterGallery = function(category) {
         document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
