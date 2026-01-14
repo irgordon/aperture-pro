@@ -49,4 +49,21 @@ add_action('wp_enqueue_scripts', function () {
     wp_localize_script('aperture-pro-studio-app', 'ApertureProStudio', [
         'restUrl' => esc_url_raw(rest_url('aperture-pro/v1/')),
     ]);
+
+    // Enqueue Google reCAPTCHA
+    wp_enqueue_script(
+        'google-recaptcha',
+        'https://www.google.com/recaptcha/api.js',
+        [],
+        null,
+        true
+    );
 });
+
+// Add async defer to reCAPTCHA
+add_filter('script_loader_tag', function ($tag, $handle) {
+    if ($handle === 'google-recaptcha') {
+        return str_replace(' src', ' async defer src', $tag);
+    }
+    return $tag;
+}, 10, 2);
