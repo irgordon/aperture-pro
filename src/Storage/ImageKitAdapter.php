@@ -116,19 +116,18 @@ class ImageKitAdapter implements StorageAdapterInterface
 
     protected function storeLegacy(string $localPath, string $targetPath): string
     {
-        $fileContent = file_get_contents($localPath);
-        if ($fileContent === false) {
-            throw new \Exception("Failed to read file at $localPath");
-        }
-
-        // Use base64 for reliable transmission via WP remote post
-        $base64File = base64_encode($fileContent);
         $fileName = basename($targetPath);
         $folder = dirname($targetPath);
 
         // Normalize folder
         if ($folder === '.' || $folder === '\\') {
             $folder = '/';
+        }
+
+        // Use a stream to read the file and encode it in chunks to save memory.
+        $handle = fopen("php://filter/read=convert.base64-encode/resource=$localPath", 'r');
+        if ($handle === false) {
+            throw new \Exception("Failed to open and encode file at $localPath");
         }
 
         // Construct multipart boundary and body
@@ -138,12 +137,17 @@ class ImageKitAdapter implements StorageAdapterInterface
             'Content-Type' => 'multipart/form-data; boundary=' . $boundary,
         ];
 
+        // Build the payload piece by piece
         $payload = '';
 
-        // file
+        // File content (streamed and encoded)
         $payload .= "--" . $boundary . "\r\n";
         $payload .= 'Content-Disposition: form-data; name="file"' . "\r\n\r\n";
-        $payload .= $base64File . "\r\n";
+        while (!feof($handle)) {
+            $payload .= fread($handle, 1024 * 1024); // Read in 1MB chunks
+        }
+        fclose($handle);
+        $payload .= "\r\n";
 
         // fileName
         $payload .= "--" . $boundary . "\r\n";
