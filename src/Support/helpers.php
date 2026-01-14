@@ -12,9 +12,9 @@ if (!function_exists('ap_get_project_images')) {
      * @param int $offset
      * @return WP_Post[]
      */
-    function ap_get_project_images(int $project_id, int $limit = -1, int $offset = 0): array
+    function ap_get_project_images(int $project_id, int $limit = -1, int $offset = 0, string $fields = ''): array
     {
-        return get_posts([
+        $args = [
             'post_type'      => 'attachment',
             'post_parent'    => $project_id,
             'posts_per_page' => $limit,
@@ -22,7 +22,13 @@ if (!function_exists('ap_get_project_images')) {
             'post_mime_type' => 'image',
             'orderby'        => 'menu_order',
             'order'          => 'ASC',
-        ]);
+        ];
+
+        if (!empty($fields)) {
+            $args['fields'] = $fields;
+        }
+
+        return get_posts($args);
     }
 }
 

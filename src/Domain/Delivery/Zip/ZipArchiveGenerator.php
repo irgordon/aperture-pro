@@ -30,14 +30,14 @@ class ZipArchiveGenerator implements ZipGeneratorInterface
         $offset = 0;
 
         while (true) {
-            $images = ap_get_project_images($project_id, $batch_size, $offset);
+            $image_ids = ap_get_project_images($project_id, $batch_size, $offset, 'ids');
 
-            if (empty($images)) {
+            if (empty($image_ids)) {
                 break; // No more images
             }
 
-            foreach ($images as $image) {
-                $filePath = get_attached_file($image->ID);
+            foreach ($image_ids as $image_id) {
+                $filePath = get_attached_file($image_id);
                 if ($filePath && file_exists($filePath)) {
                     $fileName = basename($filePath);
 
