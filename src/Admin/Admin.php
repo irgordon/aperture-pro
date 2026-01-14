@@ -61,6 +61,15 @@ class Admin
 
         add_submenu_page(
             'aperture-pro-projects',
+            'Link In Bio',
+            'Link In Bio',
+            'manage_options',
+            'aperture-pro-bio',
+            [BioScreen::class, 'render']
+        );
+
+        add_submenu_page(
+            'aperture-pro-projects',
             'Health',
             'Health',
             'ap_manage_projects',
@@ -72,6 +81,30 @@ class Admin
     public static function enqueueAssets(string $hook): void
     {
         if (strpos($hook, 'aperture-pro') === false) {
+            return;
+        }
+
+        // Bio Assets
+        if (strpos($hook, 'aperture-pro-bio') !== false) {
+            wp_enqueue_style(
+                'aperture-pro-admin',
+                plugins_url('assets/admin.css', APERTURE_PRO_FILE),
+                [],
+                APERTURE_PRO_VERSION
+            );
+
+            wp_enqueue_script(
+                'aperture-pro-bio',
+                plugins_url('assets/bio-admin.js', APERTURE_PRO_FILE),
+                ['wp-api-fetch'],
+                APERTURE_PRO_VERSION,
+                true
+            );
+
+            wp_localize_script('aperture-pro-bio', 'ApertureProAdmin', [
+                'restUrl' => esc_url_raw(rest_url('aperture-pro/v1/')),
+                'nonce'   => wp_create_nonce('wp_rest'),
+            ]);
             return;
         }
 
