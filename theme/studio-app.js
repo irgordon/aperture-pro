@@ -1,83 +1,101 @@
 (function () {
+    // --- 1. SPA MODAL LOGIC (With Deep Linking) ---
 
-    /* ===========================
-       Helpers
-    ============================ */
-    const qs = (sel, root = document) => root.querySelector(sel);
-    const qsa = (sel, root = document) => [...root.querySelectorAll(sel)];
+    window.openModal = function(id) {
+        document.body.style.overflow = 'hidden';
+        const modal = document.getElementById(id + '-modal');
+        if (modal) {
+            modal.classList.add('active');
 
-    const portfolioModal = qs('#ap-portfolio-modal');
-    const termsModal = qs('#ap-terms-modal');
-    const header = qs('.ap-header');
+            // DEEP LINKING: Update URL to #gallery without reloading
+            history.pushState({modal: id}, "", "#" + id);
 
-
-    /* ===========================
-       Sticky Header Shadow
-    ============================ */
-    let lastScroll = 0;
-    window.addEventListener('scroll', () => {
-        const current = window.scrollY;
-        if (current > 10) {
-            header.classList.add('scrolled');
-        } else {
-            header.classList.remove('scrolled');
+            // A11Y: Move focus to close button
+            const closeBtn = modal.querySelector('.close-btn');
+            if(closeBtn) closeBtn.focus();
         }
-        lastScroll = current;
-    });
+    };
 
+    window.closeModal = function() {
+        document.body.style.overflow = 'auto';
+        document.querySelectorAll('.spa-modal').forEach(m => m.classList.remove('active'));
 
-    /* ===========================
-       Hamburger Menu
-       (You can expand this later)
-    ============================ */
-    const hamburger = qs('.ap-hamburger');
-    hamburger.addEventListener('click', () => {
-        document.body.classList.toggle('menu-open');
-    });
+        // Clean up URL hash
+        if(window.location.hash) {
+            history.pushState(null, "", " ");
+        }
+    };
 
-
-    /* ===========================
-       Portfolio Modal
-    ============================ */
-    qsa('[data-open-portfolio]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            portfolioModal.classList.add('active');
+    // Handle Browser Back Button
+    window.onpopstate = function(event) {
+        if(event.state && event.state.modal) {
+            // If history state exists (forward button), open modal
             document.body.style.overflow = 'hidden';
-        });
+            const modal = document.getElementById(event.state.modal + '-modal');
+            if(modal) modal.classList.add('active');
+        } else {
+            // If back button pressed (no state), close all
+            document.body.style.overflow = 'auto';
+            document.querySelectorAll('.spa-modal').forEach(m => m.classList.remove('active'));
+        }
+    };
+
+    // Handle Deep Link on Page Load (e.g. user visits iangordon.pro/#gallery)
+    document.addEventListener('DOMContentLoaded', () => {
+        const hash = window.location.hash.substring(1); // remove #
+        if(hash === 'gallery' || hash === 'terms') {
+            openModal(hash);
+        }
     });
 
-    qs('#ap-portfolio-modal .ap-modal-close').addEventListener('click', () => {
-        portfolioModal.classList.remove('active');
-        document.body.style.overflow = '';
-    });
+    // --- 2. GALLERY FILTER LOGIC ---
+    window.filterGallery = function(category) {
+        document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+        if (event && event.target) {
+            event.target.classList.add('active');
+        }
 
-
-    /* ===========================
-       Terms Modal
-    ============================ */
-    qsa('[data-open-terms]').forEach(btn => {
-        btn.addEventListener('click', () => {
-            termsModal.classList.add('active');
-            document.body.style.overflow = 'hidden';
-        });
-    });
-
-    qs('#ap-terms-modal .ap-modal-close').addEventListener('click', () => {
-        termsModal.classList.remove('active');
-        document.body.style.overflow = '';
-    });
-
-
-    /* ===========================
-       Close modals on background click
-    ============================ */
-    [portfolioModal, termsModal].forEach(modal => {
-        modal.addEventListener('click', (e) => {
-            if (e.target === modal) {
-                modal.classList.remove('active');
-                document.body.style.overflow = '';
+        document.querySelectorAll('.masonry-item').forEach(item => {
+            if (category === 'all' || item.getAttribute('data-category') === category) {
+                item.classList.remove('hidden');
+            } else {
+                item.classList.add('hidden');
             }
         });
+    };
+
+    // --- 3. GOOGLE SHEET FORM LOGIC ---
+    // IMPORTANT: Paste your Web App URL here
+    const scriptURL = 'https://script.google.com/macros/s/AKfycbxn-dTN2mflSSpNfw0yGMSnZB4w-CSiStvlnMBlvKOEbMlD5ZLx0_3JsriZVd3e6FX_/exec';
+
+    document.addEventListener('DOMContentLoaded', () => {
+        const form = document.forms['submit-to-google-sheet'];
+        const btn = document.getElementById('submitBtn');
+        const successMsg = document.getElementById('form-success');
+        const errorMsg = document.getElementById('form-error');
+
+        if(form) {
+            form.addEventListener('submit', e => {
+                e.preventDefault();
+                btn.disabled = true;
+                btn.innerText = "Sending...";
+
+                fetch(scriptURL, { method: 'POST', body: new FormData(form)})
+                    .then(response => {
+                        form.style.display = "none";
+                        if(successMsg) {
+                            successMsg.style.display = "block";
+                            successMsg.scrollIntoView({behavior: "smooth"});
+                        }
+                    })
+                    .catch(error => {
+                        console.error('Error!', error.message);
+                        if(errorMsg) errorMsg.style.display = "block";
+                        btn.disabled = false;
+                        btn.innerText = "Send Request";
+                    });
+            });
+        }
     });
 
 })();
