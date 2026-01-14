@@ -13,6 +13,7 @@ class BioSettings
     const OPTION_BIO_PROFILE_IMAGE = 'ap_bio_profile_image';
     const OPTION_BIO_NAME = 'ap_bio_name';
     const OPTION_BIO_DESCRIPTION = 'ap_bio_description';
+    const OPTION_BIO_PRIMARY_COLOR = 'ap_bio_primary_color';
 
     public static function getSettings(): array
     {
@@ -20,6 +21,7 @@ class BioSettings
             'profileImage' => get_option(self::OPTION_BIO_PROFILE_IMAGE, ''),
             'name' => get_option(self::OPTION_BIO_NAME, ''),
             'description' => get_option(self::OPTION_BIO_DESCRIPTION, ''),
+            'primaryColor' => get_option(self::OPTION_BIO_PRIMARY_COLOR, '#0073aa'),
             'links' => get_option(self::OPTION_BIO_LINKS, []),
             'donationEnabled' => (bool) get_option(self::OPTION_BIO_DONATION_ENABLED, false),
             'donationLink' => get_option(self::OPTION_BIO_DONATION_LINK, ''),
@@ -44,6 +46,9 @@ class BioSettings
         }
         if (isset($settings['description'])) {
             update_option(self::OPTION_BIO_DESCRIPTION, sanitize_textarea_field($settings['description']));
+        }
+        if (isset($settings['primaryColor'])) {
+            update_option(self::OPTION_BIO_PRIMARY_COLOR, sanitize_hex_color($settings['primaryColor']));
         }
         if (isset($settings['links']) && is_array($settings['links'])) {
             $cleanLinks = array_map(function ($link) {

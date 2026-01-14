@@ -32,6 +32,20 @@
             </table>
         </div>
 
+        <!-- Appearance Section -->
+        <div class="card" style="margin-top: 20px;">
+            <h2>Appearance</h2>
+            <table class="form-table">
+                <tr>
+                    <th scope="row"><label for="bio-primary-color">Primary Color</label></th>
+                    <td>
+                        <input name="primaryColor" type="color" id="bio-primary-color" value="#0073aa">
+                        <p class="description">Sets the primary color for buttons and links.</p>
+                    </td>
+                </tr>
+            </table>
+        </div>
+
         <!-- Links Section -->
         <div class="card" style="margin-top: 20px;">
             <h2>Links</h2>
