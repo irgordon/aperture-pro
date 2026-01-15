@@ -30,6 +30,9 @@ class ProjectsScreen
             $project_ids = wp_list_pluck($projects, 'ID');
             $ids_sql     = implode(',', array_map('intval', $project_ids));
 
+            // Batch fetch post meta to prevent N+1 queries on get_post_meta
+            update_meta_cache('post', $project_ids);
+
             // Batch fetch delivery status
             $deliveries = $wpdb->get_results("
                 SELECT project_id, status
