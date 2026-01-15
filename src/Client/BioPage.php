@@ -44,6 +44,11 @@ class BioPage
                 APERTURE_PRO_VERSION
             );
 
+            $settings = BioSettings::getSettings();
+            $primary_color = esc_attr($settings['primaryColor']);
+            $custom_css = ":root { --ap-bio-primary: {$primary_color}; }";
+            wp_add_inline_style('aperture-pro-bio', $custom_css);
+
             wp_enqueue_script(
                 'aperture-pro-bio',
                 plugins_url('assets/bio.js', APERTURE_PRO_FILE),
