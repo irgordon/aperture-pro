@@ -34,7 +34,7 @@ class WpImageOptimizer implements ImageOptimizerInterface
                 'order'          => 'ASC',
                 'meta_query'     => [
                     [
-                        'key'     => '_ap_optimized',
+                    'key'     => '_ap_optimization_data',
                         'compare' => 'NOT EXISTS',
                     ],
                 ],
@@ -73,7 +73,6 @@ class WpImageOptimizer implements ImageOptimizerInterface
                         $result->bytes_saved += $saved_bytes;
                         $result->total_optimized++;
 
-                        update_post_meta($image->ID, '_ap_optimized', 'optimized');
                         update_post_meta($image->ID, '_ap_optimization_data', [
                             'status' => 'optimized',
                             'reason' => 'saved_bytes',
@@ -108,7 +107,6 @@ class WpImageOptimizer implements ImageOptimizerInterface
 
                     } else {
                         // Skipped (no savings)
-                        update_post_meta($image->ID, '_ap_optimized', 'skipped');
                         update_post_meta($image->ID, '_ap_optimization_data', [
                             'status' => 'skipped',
                             'reason' => 'no_savings',
@@ -122,7 +120,13 @@ class WpImageOptimizer implements ImageOptimizerInterface
                 } catch (\Exception $e) {
                     $result->errors[] = "Exception optimizing image ID {$image->ID}: " . $e->getMessage();
                     Logger::error("Optimization exception for image {$image->ID}", ['error' => $e->getMessage()], $project_id);
-                    update_post_meta($image->ID, '_ap_optimized', 'error');
+                    update_post_meta($image->ID, '_ap_optimization_data', [
+                        'status' => 'error',
+                        'reason' => 'exception',
+                        'error_message' => $e->getMessage(),
+                        'timestamp' => time(),
+                        'attempts' => $attempts,
+                    ]);
                     $failed_ids[] = $image->ID;
                 }
             }
