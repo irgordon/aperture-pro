@@ -1,83 +1,129 @@
 <?php
+
 /**
- * Plugin Name: Aperture Pro
- * Description: A professional SaaS photography proofing and delivery platform.
- * Version: 1.0.0
+ * The plugin bootstrap file
+ *
+ * @link              https://github.com/irgordon/aperture-pro-wordpress
+ * @since             1.0.0
+ * @package           Aperture_Pro
+ *
+ * @wordpress-plugin
+ * Plugin Name:       Aperture Pro
+ * Plugin URI:        https://iangordon.app/aperturepro
+ * Description:       Aperture Pro is a modern, production‑grade WordPress plugin built for photography studios that need a secure, elegant, and scalable way to deliver proofs, collect approvals, and provide final downloads. It blends a polished client experience with a robust operational backend designed for reliability, observability, and long‑term maintainability.
+ * Version:           1.0.0
+ * Author:            Ian Gordon
+ * Author URI:        https://iangordon.app/
+ * License:           MIT License
+ * License URI:       https://mit-license.org/
+ * Text Domain:       aperture-pro
+ * Domain Path:       /languages
  */
 
-if (!defined('ABSPATH')) exit;
+if (!defined('ABSPATH')) {
+    exit;
+}
 
-define('APERTURE_PRO_FILE', __FILE__);
-define('APERTURE_PRO_PATH', plugin_dir_path(__FILE__));
-define('APERTURE_PRO_URL', plugin_dir_url(__FILE__));
+/* -------------------------------------------------------------------------
+ * Constants
+ * ------------------------------------------------------------------------- */
+
 define('APERTURE_PRO_VERSION', '1.0.0');
+define('APERTURE_PRO_FILE', __FILE__);
+define('APERTURE_PRO_DIR', plugin_dir_path(__FILE__));
+define('APERTURE_PRO_URL', plugin_dir_url(__FILE__));
 
-/*
-|--------------------------------------------------------------------------
-| Autoloader
-|--------------------------------------------------------------------------
-*/
-require_once APERTURE_PRO_PATH . 'src/Core/Autoloader.php';
-AperturePro\Core\Autoloader::register('AperturePro', APERTURE_PRO_PATH . 'src');
+// Backwards compatibility for existing code
+define('APERTURE_PRO_PATH', APERTURE_PRO_DIR);
 
-/*
-|--------------------------------------------------------------------------
-| Helpers
-|--------------------------------------------------------------------------
-*/
-require_once APERTURE_PRO_PATH . 'src/Support/helpers.php';
+/* -------------------------------------------------------------------------
+ * Autoload
+ * ------------------------------------------------------------------------- */
 
-/*
-|--------------------------------------------------------------------------
-| Activation / Deactivation
-|--------------------------------------------------------------------------
-*/
-register_activation_hook(__FILE__, [AperturePro\Core\Installer::class, 'activate']);
-register_deactivation_hook(__FILE__, [AperturePro\Core\Installer::class, 'deactivate']);
+$autoload = APERTURE_PRO_DIR . 'vendor/autoload.php';
+if (file_exists($autoload)) {
+    require_once $autoload;
+} else {
+    require_once APERTURE_PRO_DIR . 'inc/autoloader.php';
+}
 
-/*
-|--------------------------------------------------------------------------
-| Plugin Bootstrap
-|--------------------------------------------------------------------------
-*/
-add_action('plugins_loaded', function () {
+/* -------------------------------------------------------------------------
+ * Activation: set one‑time setup redirect flag
+ * ------------------------------------------------------------------------- */
 
-    // Core hooks (logging, events, schema validation)
-    AperturePro\Core\Hooks::register();
-
-    // Storage (must load early for Delivery + Jobs)
-    AperturePro\Storage\StorageManager::boot();
-
-    // Jobs (runner)
-    add_action('ap_run_job', [AperturePro\Domain\Jobs\JobRunner::class, 'handle'], 10, 1);
-
-    // REST API
-    add_action('rest_api_init', function () {
-        (new AperturePro\Http\Rest\ProjectStatusController())->register_routes();
-        (new AperturePro\Http\Rest\ProofingController())->register_routes();
-        (new AperturePro\Http\Rest\DeliveryController())->register_routes();
-        (new AperturePro\Http\Rest\TokenController())->register_routes();
-        (new AperturePro\Http\Rest\JobsController())->register_routes();
-        (new AperturePro\Http\Rest\WizardController())->register_routes();
-        (new AperturePro\Http\Rest\BioController())->register_routes();
-    });
-
-    // Admin UI
-    if (is_admin()) {
-        AperturePro\Admin\Admin::boot();
+register_activation_hook(__FILE__, function () {
+    if (!current_user_can('manage_options')) {
+        return;
     }
 
-    // Client Portal
-    AperturePro\Client\Portal::boot();
-    AperturePro\Client\Gallery::boot();
-    AperturePro\Client\BioPage::boot();
+    set_transient('aperture_pro_do_setup_redirect', 1, 60);
 
-    // Shared component library
-    add_action('wp_enqueue_scripts', function () {
-        wp_enqueue_style('aperture-pro-components', APERTURE_PRO_URL . 'assets/components.css', [], APERTURE_PRO_VERSION);
-    });
+    // Call installer activation
+    if (class_exists('AperturePro\Core\Installer')) {
+        \AperturePro\Core\Installer::activate();
+    }
+});
 
-    add_action('admin_enqueue_scripts', function () {
-        wp_enqueue_style('aperture-pro-components', APERTURE_PRO_URL . 'assets/components.css', [], APERTURE_PRO_VERSION);
-    });
+register_deactivation_hook(__FILE__, function () {
+    if (class_exists('AperturePro\Core\Installer')) {
+        \AperturePro\Core\Installer::deactivate();
+    }
+});
+
+/* -------------------------------------------------------------------------
+ * One‑time setup redirect (admin only)
+ * ------------------------------------------------------------------------- */
+
+add_action('admin_init', function () {
+    if (!current_user_can('manage_options')) {
+        return;
+    }
+
+    if (!get_transient('aperture_pro_do_setup_redirect')) {
+        return;
+    }
+
+    delete_transient('aperture_pro_do_setup_redirect');
+
+    if (
+        wp_doing_ajax() ||
+        defined('REST_REQUEST') ||
+        wp_doing_cron() ||
+        (isset($_GET['page']) && $_GET['page'] === 'aperture-pro-setup')
+    ) {
+        return;
+    }
+
+    wp_safe_redirect(admin_url('admin.php?page=aperture-pro-setup'));
+    exit;
+});
+
+/* -------------------------------------------------------------------------
+ * Plugin Initialization via Loader
+ * ------------------------------------------------------------------------- */
+
+add_action('plugins_loaded', function () {
+
+    if (!class_exists('\AperturePro\Loader')) {
+        error_log('[Aperture Pro] Loader class missing. Plugin not initialized.');
+        return;
+    }
+
+    $loader = new \AperturePro\Loader(
+        APERTURE_PRO_FILE,
+        APERTURE_PRO_DIR,
+        APERTURE_PRO_URL,
+        APERTURE_PRO_VERSION
+    );
+
+    /**
+     * Register all core services here.
+     * These classes each implement a register() method.
+     */
+    $loader->register_default_services();
+
+    /**
+     * Boot all services.
+     */
+    $loader->boot();
 });
